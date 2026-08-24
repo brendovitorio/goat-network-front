@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Nav } from "@/components/goatlanding/Nav";
 import { Hero } from "@/components/goatlanding/Hero";
+import { LiveDemo } from "@/components/goatlanding/LiveDemo";
 import { Features } from "@/components/goatlanding/Features";
 import { HowItWorks } from "@/components/goatlanding/HowItWorks";
 import { Pricing } from "@/components/goatlanding/Pricing";
@@ -31,6 +32,7 @@ export default function Index() {
     <main className="relative min-h-screen bg-background font-sans text-foreground">
       <Nav />
       <Hero />
+      <LiveDemo />
       <Pricing />
       <Features />
       <HowItWorks />
