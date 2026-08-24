@@ -279,7 +279,6 @@ type FooterCopy = {
   }[];
   stayInLoop: string;
   newsletterBlurb: string;
-  joinDiscord: string;
   rights: string;
   qualityFirst: string;
 };
@@ -311,7 +310,6 @@ const footerPt: FooterCopy = {
   ],
   stayInLoop: "Fique por dentro",
   newsletterBlurb: "Novidades sobre produtos e atualizações saem primeiro no nosso Discord.",
-  joinDiscord: "Entrar no Discord",
   rights: "© 2026 Goat Network. Todos os direitos reservados.",
   qualityFirst: "Qualidade em primeiro lugar",
 };
@@ -343,7 +341,6 @@ const footerEn: FooterCopy = {
   ],
   stayInLoop: "Stay in the loop",
   newsletterBlurb: "Product news and updates land first on our Discord.",
-  joinDiscord: "Join Discord",
   rights: "© 2026 Goat Network. All rights reserved.",
   qualityFirst: "Quality first",
 };
@@ -397,14 +394,6 @@ export function Footer() {
           <p className="mt-2 max-w-[280px] text-[13px] leading-[1.6] text-muted-foreground">
             {t.newsletterBlurb}
           </p>
-          <a
-            href="https://discord.gg/VpHaMPpEHZ"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-5 inline-flex items-center rounded-md border border-hairline bg-surface-2 px-3.5 py-2 text-[12.5px] font-medium transition-colors hover:border-gold/40"
-          >
-            {t.joinDiscord}
-          </a>
         </div>
         <div className="grid place-items-center border-b border-hairline p-8 md:border-r md:border-b-0">
           <img ref={logoRef} src={logo} alt="GOAT" className="h-8 w-auto opacity-90" />
