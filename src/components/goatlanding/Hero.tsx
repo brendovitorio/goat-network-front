@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
-import goatLogo from "@/assets/goat-logo.png";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { gsap, ScrollTrigger } from "@/animations/gsap";
 import { usePrefersReducedMotion } from "@/animations/useReducedMotion";
 import { useScrollVelocity } from "@/animations/useScrollVelocity";
 import { Magnetic } from "@/animations/Magnetic";
+import { GOAT_ICON_PATH, GOAT_ICON_VIEWBOX } from "./goat-icon";
 
 const brands = [
   "COMPLEXO",
@@ -57,7 +57,8 @@ export function Hero() {
   const glowRef = useRef<HTMLDivElement>(null);
   const bgLogoWrapRef = useRef<HTMLDivElement>(null);
   const bgLogoScaleRef = useRef<HTMLDivElement>(null);
-  const bgLogoImgRef = useRef<HTMLImageElement>(null);
+  const bgLogoImgRef = useRef<SVGSVGElement>(null);
+  const bgLogoPathRef = useRef<SVGPathElement>(null);
   const contentOuterRef = useRef<HTMLDivElement>(null);
   const contentInnerRef = useRef<HTMLDivElement>(null);
   const eyebrowRef = useRef<HTMLSpanElement>(null);
@@ -109,6 +110,37 @@ export function Hero() {
         .to(subtitleRef.current, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7 }, "-=0.5")
         .to(buttonsRef.current, { opacity: 1, y: 0, scale: 1, duration: 0.6 }, "-=0.4")
         .to(statusRowRef.current, { opacity: 1, y: 0, duration: 0.6 }, "-=0.3");
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [reduced]);
+
+  // Background goat mark: traces itself in as a thin line, then settles into the
+  // faint filled watermark used for the rest of the visit.
+  useLayoutEffect(() => {
+    const path = bgLogoPathRef.current;
+    const wrap = bgLogoWrapRef.current;
+    if (!path || !wrap || reduced) return;
+
+    const length = path.getTotalLength();
+
+    const ctx = gsap.context(() => {
+      gsap.set(wrap, { opacity: 0 });
+      gsap.set(path, {
+        fill: "transparent",
+        stroke: "currentColor",
+        strokeWidth: 3,
+        strokeDasharray: length,
+        strokeDashoffset: length,
+      });
+
+      gsap
+        .timeline({ delay: 0.1 })
+        .to(wrap, { opacity: 0.18, duration: 0.6, ease: "power2.out" }, 0)
+        .to(path, { strokeDashoffset: 0, duration: 2.2, ease: "power2.inOut" }, 0)
+        .to(path, { fill: "currentColor", duration: 0.8, ease: "power2.out" }, 1.9)
+        .to(wrap, { opacity: 0.035, duration: 1, ease: "power2.out" }, 2.1)
+        .set(path, { stroke: "none" });
     }, sectionRef);
 
     return () => ctx.revert();
@@ -223,7 +255,13 @@ export function Hero() {
         className="pointer-events-none absolute inset-0 grid place-items-center opacity-[0.02] select-none"
       >
         <div ref={bgLogoScaleRef} className="w-[900px] max-w-none">
-          <img ref={bgLogoImgRef} src={goatLogo} alt="" className="h-auto w-full" />
+          <svg
+            ref={bgLogoImgRef}
+            viewBox={GOAT_ICON_VIEWBOX}
+            className="h-auto w-full text-foreground"
+          >
+            <path ref={bgLogoPathRef} d={GOAT_ICON_PATH} fill="currentColor" />
+          </svg>
         </div>
       </div>
 
@@ -258,7 +296,7 @@ export function Hero() {
               <Magnetic max={5}>
                 <a
                   href="/products"
-                  className="rounded-lg bg-primary px-6 py-3 text-[13.5px] font-semibold text-primary-foreground shadow-[0_0_0_1px_oklch(0.755_0.135_73/0.4)] transition-transform hover:scale-[1.02]"
+                  className="rounded-lg bg-primary px-6 py-3 text-[13.5px] font-semibold text-primary-foreground shadow-[0_0_0_1px_oklch(0.94_0.012_240/0.4)] transition-transform hover:scale-[1.02]"
                 >
                   {t.ctaProducts}
                 </a>

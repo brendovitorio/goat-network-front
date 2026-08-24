@@ -265,7 +265,7 @@ export default function AnticheatProductPage() {
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a
                 href="/products"
-                className="rounded-lg bg-primary px-6 py-3 text-[13.5px] font-semibold text-primary-foreground shadow-[0_0_0_1px_oklch(0.755_0.135_73/0.4)] transition-transform hover:scale-[1.02]"
+                className="rounded-lg bg-primary px-6 py-3 text-[13.5px] font-semibold text-primary-foreground shadow-[0_0_0_1px_oklch(0.94_0.012_240/0.4)] transition-transform hover:scale-[1.02]"
               >
                 {t.ctaPricing}
               </a>

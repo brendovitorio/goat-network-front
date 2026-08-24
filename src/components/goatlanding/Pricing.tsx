@@ -129,7 +129,7 @@ function PlanCard({ plan, idx, t }: { plan: PlanItem; idx: number; t: Copy }) {
           className={cn(
             "spotlight relative flex h-full flex-col rounded-2xl p-8 transition-colors duration-300",
             plan.badge
-              ? "neon-border border border-gold/25 bg-surface shadow-[0_0_90px_-24px_oklch(0.755_0.135_73/0.45)]"
+              ? "neon-border border border-gold/25 bg-surface shadow-[0_0_90px_-24px_oklch(0.94_0.012_240/0.45)]"
               : "border border-hairline bg-surface-2/40 hover:border-foreground/20",
           )}
         >

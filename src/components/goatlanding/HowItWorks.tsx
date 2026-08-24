@@ -151,7 +151,7 @@ function Orbit() {
       </div>
       <div className="absolute inset-x-8 top-1/2 -translate-y-[26px]">
         {inView && (
-          <span className="absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2 animate-[travel-x_2.6s_ease-in-out_infinite] rounded-full bg-gold shadow-[0_0_8px_2px_oklch(0.755_0.135_73/0.5)]" />
+          <span className="absolute top-1/2 h-1.5 w-1.5 -translate-y-1/2 animate-[travel-x_2.6s_ease-in-out_infinite] rounded-full bg-gold shadow-[0_0_8px_2px_oklch(0.94_0.012_240/0.5)]" />
         )}
       </div>
 
@@ -168,7 +168,7 @@ function Orbit() {
         <div
           className={cn(
             "relative z-10 flex h-[76px] w-[76px] items-center justify-center rounded-2xl border border-hairline bg-surface shadow-sm transition-shadow duration-700",
-            inView && "shadow-[0_0_0_1px_oklch(0.755_0.135_73/0.25)]",
+            inView && "shadow-[0_0_0_1px_oklch(0.94_0.012_240/0.25)]",
           )}
         >
           <CreditCard className="h-[30px] w-[30px] text-foreground opacity-90" strokeWidth={1.5} />

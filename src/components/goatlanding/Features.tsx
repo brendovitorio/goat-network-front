@@ -79,7 +79,7 @@ function PaymentVisual({ active }: { active: boolean }) {
       <div
         className={cn(
           "grid h-16 w-16 place-items-center rounded-2xl border border-hairline bg-surface transition-shadow duration-500",
-          active && "shadow-[0_0_0_1px_oklch(0.755_0.135_73/0.3)]",
+          active && "shadow-[0_0_0_1px_oklch(0.94_0.012_240/0.3)]",
         )}
       >
         <ShieldCheck className="h-6 w-6 text-gold" strokeWidth={1.75} />

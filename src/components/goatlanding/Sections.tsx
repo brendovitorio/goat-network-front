@@ -235,7 +235,7 @@ export function CTA() {
             "--cta-x": "50%",
             "--cta-y": "40%",
             background:
-              "radial-gradient(560px circle at var(--cta-x) var(--cta-y), oklch(0.755 0.135 73 / 0.14), transparent 70%)",
+              "radial-gradient(560px circle at var(--cta-x) var(--cta-y), oklch(0.94 0.012 240 / 0.14), transparent 70%)",
           } as React.CSSProperties
         }
       />
