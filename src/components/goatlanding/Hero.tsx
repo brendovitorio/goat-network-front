@@ -254,7 +254,7 @@ export function Hero() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 grid place-items-center opacity-[0.02] select-none"
       >
-        <div ref={bgLogoScaleRef} className="w-[900px] max-w-none">
+        <div ref={bgLogoScaleRef} className="w-[65vw] max-w-[900px]">
           <svg
             ref={bgLogoImgRef}
             viewBox={GOAT_ICON_VIEWBOX}
