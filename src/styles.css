@@ -1,0 +1,401 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-hairline: var(--hairline);
+  --color-elevated: var(--elevated);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-gold: var(--gold);
+  --color-gold-dim: var(--gold-dim);
+  --animate-marquee: marquee 34s linear infinite;
+  --animate-rise: rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(0.155 0.013 75);
+  --foreground: oklch(0.955 0.012 80);
+  --card: oklch(0.185 0.015 75);
+  --card-foreground: oklch(0.955 0.012 80);
+  --popover: oklch(0.205 0.017 75);
+  --popover-foreground: oklch(0.955 0.012 80);
+  --primary: oklch(0.755 0.135 73);
+  --primary-foreground: oklch(0.155 0.02 75);
+  --secondary: oklch(0.255 0.018 75);
+  --secondary-foreground: oklch(0.955 0.012 80);
+  --muted: oklch(0.235 0.016 75);
+  --muted-foreground: oklch(0.63 0.022 75);
+  --accent: oklch(0.755 0.135 73);
+  --accent-foreground: oklch(0.155 0.02 75);
+  --destructive: oklch(0.58 0.185 27);
+  --destructive-foreground: oklch(0.97 0.01 80);
+  --border: oklch(0.94 0.02 75 / 10%);
+  --input: oklch(0.94 0.02 75 / 13%);
+  --ring: oklch(0.755 0.135 73 / 55%);
+  --hairline: oklch(0.94 0.02 75 / 8%);
+  --elevated: oklch(0.22 0.017 75);
+  --surface: oklch(0.185 0.015 75);
+  --surface-2: oklch(0.225 0.017 75);
+  --gold: oklch(0.755 0.135 73);
+  --gold-dim: oklch(0.755 0.135 73 / 14%);
+  --shadow-glow: 0 0 90px -24px oklch(0.755 0.135 73 / 0.45);
+  --sidebar: oklch(0.145 0.013 75);
+  --sidebar-accent: oklch(0.255 0.018 75);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-color: var(--gold-dim) var(--color-background);
+    scrollbar-width: thin;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-background);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklch, var(--gold) 45%, transparent);
+    border-radius: 999px;
+    border: 2px solid var(--color-background);
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklch, var(--gold) 70%, transparent);
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: var(--color-background);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.15s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .goat-report-print,
+  .goat-report-print * {
+    visibility: visible;
+  }
+  .goat-report-print {
+    position: absolute;
+    inset: 0;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .goat-report-body {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .goat-report-no-print {
+    display: none !important;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ponto viajando ao longo de uma linha (feature Payment, orbit) */
+@keyframes travel-y {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes travel-x {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* Nova linha do feed do CodePanel: sobe, aparece e o flash dourado
+   esmaece - dá a sensação de uma linha nova "chegando" no terminal. */
+@keyframes feed-row-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    background-color: oklch(0.755 0.135 73 / 0.12);
+  }
+  55% {
+    background-color: oklch(0.755 0.135 73 / 0.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    background-color: transparent;
+  }
+}
+
+/* Pequeno burst de anel dourado - usado em ativação de licença/unlock */
+@keyframes pop-ring {
+  0% {
+    box-shadow: 0 0 0 0 oklch(0.755 0.135 73 / 0.35);
+  }
+  60% {
+    box-shadow: 0 0 0 10px oklch(0.755 0.135 73 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.755 0.135 73 / 0);
+  }
+}
+
+/* Vertical light bars used across hero + cards, tinted with the gold accent */
+@utility bars {
+  background-image: repeating-linear-gradient(
+    90deg,
+    oklch(0.755 0.135 73 / 0.4) 0px,
+    oklch(0.755 0.135 73 / 0.4) 1px,
+    transparent 1px,
+    transparent 7px
+  );
+  mask-image: linear-gradient(to top, black 0%, transparent 85%);
+  -webkit-mask-image: linear-gradient(to top, black 0%, transparent 85%);
+}
+
+@utility bars-soft {
+  background-image: repeating-linear-gradient(
+    90deg,
+    oklch(0.94 0.02 75 / 0.3) 0px,
+    oklch(0.94 0.02 75 / 0.3) 1px,
+    transparent 1px,
+    transparent 6px
+  );
+}
+
+@utility grain {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: radial-gradient(oklch(0.94 0.02 75) 1px, transparent 1px);
+    background-size: 3px 3px;
+  }
+}
+
+@utility hairline-x {
+  background: linear-gradient(
+    to right,
+    transparent,
+    oklch(0.94 0.02 75 / 0.16) 20%,
+    oklch(0.94 0.02 75 / 0.16) 80%,
+    transparent
+  );
+  height: 1px;
+}
+
+@utility eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility grid-bg {
+  background-image:
+    linear-gradient(oklch(0.94 0.02 75 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.94 0.02 75 / 0.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 40%, transparent 100%);
+}
+
+@utility glow-top {
+  background-image: radial-gradient(
+    ellipse 60% 100% at 50% 0%,
+    oklch(0.755 0.135 73 / 0.22) 0%,
+    transparent 70%
+  );
+}
+
+@property --neon-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes neon-spin {
+  to {
+    --neon-angle: 360deg;
+  }
+}
+
+/* Spotlight que segue o mouse nos cards de pricing/features - controlado via
+   --spotlight-x/-y/-opacity setados por JS (useTilt), sem re-render React. */
+@utility spotlight {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: var(--spotlight-opacity, 0);
+    transition: opacity 0.3s ease;
+    background: radial-gradient(
+      280px circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%),
+      oklch(0.755 0.135 73 / 0.14),
+      transparent 70%
+    );
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Fio de luz dourado fino girando em volta da borda - só o traço acende,
+   o resto do anel fica transparente (usa a border-hairline de baixo pra
+   dar forma ao card no resto do giro). */
+@utility neon-border {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(
+      from var(--neon-angle),
+      transparent 0deg,
+      transparent 268deg,
+      oklch(0.755 0.135 73 / 0.7) 300deg,
+      oklch(0.94 0.1 88) 320deg,
+      oklch(0.755 0.135 73 / 0.7) 340deg,
+      transparent 360deg
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    animation: neon-spin 4.5s linear infinite;
+  }
+}
