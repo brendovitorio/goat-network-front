@@ -9,7 +9,6 @@ import {
   Globe,
   BadgeCheck,
   Wallpaper,
-  LayoutGrid,
   Eraser,
   UserCog,
   KeyRound,
@@ -54,7 +53,6 @@ type Copy = {
   navGlobalBan: string;
   navAcId: string;
   navWall: string;
-  navSpawner: string;
   navQuickWipe: string;
   navStaff: string;
   navPermissions: string;
@@ -85,7 +83,6 @@ const pt: Copy = {
   navGlobalBan: "Global Ban",
   navAcId: "AC-ID",
   navWall: "Wall",
-  navSpawner: "Spawner",
   navQuickWipe: "Wipe Rápido",
   navStaff: "Staff",
   navPermissions: "Permissões",
@@ -116,7 +113,6 @@ const en: Copy = {
   navGlobalBan: "Global Ban",
   navAcId: "AC-ID",
   navWall: "Wall",
-  navSpawner: "Spawner",
   navQuickWipe: "Quick Wipe",
   navStaff: "Staff",
   navPermissions: "Permissions",
@@ -153,7 +149,6 @@ const getInfraestrutura = (t: Copy): Item[] => [
 
 const getFerramentas = (t: Copy): Item[] => [
   { icon: Wallpaper, label: t.navWall, slug: "wall" },
-  { icon: LayoutGrid, label: t.navSpawner, slug: "spawner" },
   { icon: Eraser, label: t.navQuickWipe, slug: "wipe" },
 ];
 

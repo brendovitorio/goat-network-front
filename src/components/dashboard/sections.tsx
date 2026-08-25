@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
   Check,
+  ChevronDown,
   Download,
   Search,
   Shield,
@@ -24,6 +25,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Panel, Stat, Table, Tag, TAG_TONE_CLASS } from "./shell";
+import { PROTECTION_MODULE_FIELDS } from "@/lib/protectionFields";
 import { MriButton } from "@/components/ui/MriButton";
 import { MriCard } from "@/components/ui/MriCard";
 import { MriSearchInput } from "@/components/ui/MriSearchInput";
@@ -220,33 +222,6 @@ type Copy = {
     newNoteButton: string;
     empty: string;
     delete: string;
-  };
-  spawner: {
-    statusPending: string;
-    statusDelivered: string;
-    statusExecuted: string;
-    statusFailed: string;
-    errorSubmitFallback: string;
-    panelTitle: string;
-    panelDesc: string;
-    optionVehicle: string;
-    optionItem: string;
-    placeholderPassport: string;
-    placeholderModel: string;
-    placeholderItem: string;
-    placeholderQuantity: string;
-    placeholderReasonOptional: string;
-    sendCommand: string;
-    passportLabel: string;
-    auditPanelTitle: string;
-    auditPanelDesc: string;
-    auditSearchPlaceholder: string;
-    auditEmpty: string;
-    colResource: string;
-    colCategory: string;
-    colPermission: string;
-    colAudit: string;
-    colDate: string;
   };
   wipe: {
     maintStatusPending: string;
@@ -582,34 +557,6 @@ const pt: Copy = {
     newNoteButton: "Nova nota",
     empty: "Nenhum aviso no mural.",
     delete: "Apagar",
-  },
-  spawner: {
-    statusPending: "Pendente",
-    statusDelivered: "Entregue ao servidor",
-    statusExecuted: "Executado",
-    statusFailed: "Falhou",
-    errorSubmitFallback: "Falha ao enviar comando de spawn",
-    panelTitle: "Spawner",
-    panelDesc:
-      "Envia veículos e itens direto pro personagem via canal remoto (fila processada pelo goat_anticheat a cada ~15s, reaproveitando /addveh e /item do revolt_admin).",
-    optionVehicle: "Veículo",
-    optionItem: "Item",
-    placeholderPassport: "Passaporte do jogador",
-    placeholderModel: "Modelo (ex: adder)",
-    placeholderItem: "Item (ex: water)",
-    placeholderQuantity: "Quantidade",
-    placeholderReasonOptional: "Motivo (opcional)",
-    sendCommand: "Enviar comando",
-    passportLabel: "Passaporte",
-    auditPanelTitle: "Auditoria de spawns",
-    auditPanelDesc: "Toda execução confirmada pelo servidor fica registrada aqui.",
-    auditSearchPlaceholder: "Buscar modelo, item ou ped",
-    auditEmpty: "Nenhum spawn executado ainda.",
-    colResource: "Recurso",
-    colCategory: "Categoria",
-    colPermission: "Permissão",
-    colAudit: "Auditoria",
-    colDate: "Data",
   },
   wipe: {
     maintStatusPending: "Aguardando o servidor buscar o comando…",
@@ -958,34 +905,6 @@ const en: Copy = {
     newNoteButton: "New note",
     empty: "No notices on the wall.",
     delete: "Delete",
-  },
-  spawner: {
-    statusPending: "Pending",
-    statusDelivered: "Delivered to server",
-    statusExecuted: "Executed",
-    statusFailed: "Failed",
-    errorSubmitFallback: "Failed to send spawn command",
-    panelTitle: "Spawner",
-    panelDesc:
-      "Sends vehicles and items directly to the character via a remote channel (queue processed by goat_anticheat every ~15s, reusing /addveh and /item from revolt_admin).",
-    optionVehicle: "Vehicle",
-    optionItem: "Item",
-    placeholderPassport: "Player passport",
-    placeholderModel: "Model (e.g.: adder)",
-    placeholderItem: "Item (e.g.: water)",
-    placeholderQuantity: "Quantity",
-    placeholderReasonOptional: "Reason (optional)",
-    sendCommand: "Send command",
-    passportLabel: "Passport",
-    auditPanelTitle: "Spawn audit log",
-    auditPanelDesc: "Every execution confirmed by the server is logged here.",
-    auditSearchPlaceholder: "Search model, item, or ped",
-    auditEmpty: "No spawns executed yet.",
-    colResource: "Resource",
-    colCategory: "Category",
-    colPermission: "Permission",
-    colAudit: "Audit",
-    colDate: "Date",
   },
   wipe: {
     maintStatusPending: "Waiting for the server to fetch the command…",
@@ -2629,13 +2548,15 @@ export function Protections() {
                 triggers: triggersFor("Anti-DoorLockBypass"),
               },
             ];
+            const fieldOverridesByModule = c.fieldOverrides || {};
             setList(
               rawList.map((m) => {
                 const key = PROTECTION_CONFIG_KEYS[m.name];
+                const luaKey = PROTECTION_MODULE_KEYS[m.name];
                 const override = key ? overrides[key] : undefined;
-                return override && PUNISHMENT_TIERS.includes(override)
-                  ? { ...m, action: override }
-                  : m;
+                const withAction =
+                  override && PUNISHMENT_TIERS.includes(override) ? { ...m, action: override } : m;
+                return { ...withAction, fieldOverrides: (luaKey && fieldOverridesByModule[luaKey]) || {} };
               }),
             );
           }
@@ -2649,16 +2570,25 @@ export function Protections() {
     if (activeServerId) {
       setSaving(true);
       try {
-        const configObj: Record<string, boolean | Record<string, string>> = {};
+        const configObj: Record<string, any> = {};
         const punishmentActions: Record<string, string> = {};
+        const fieldOverrides: Record<string, Record<string, string>> = {};
         updated.forEach((p: any) => {
           const key = PROTECTION_CONFIG_KEYS[p.name];
+          const luaKey = PROTECTION_MODULE_KEYS[p.name];
           if (key) {
             configObj[key] = p.enabled;
             punishmentActions[key] = p.action;
           }
+          if (luaKey && p.fieldOverrides && Object.keys(p.fieldOverrides).length > 0) {
+            fieldOverrides[luaKey] = p.fieldOverrides;
+          }
         });
         configObj.punishmentActions = punishmentActions;
+        // Sempre manda o mapa inteiro (não só o módulo que mudou) - o
+        // backend faz merge raso desse objeto, então mandar só o diff
+        // apagaria os valores salvos de outros módulos.
+        configObj.fieldOverrides = fieldOverrides;
         await api.updateServerConfig(activeServerId, configObj);
       } catch (err) {
         console.error("Failed to sync protection config:", err);
@@ -2678,6 +2608,14 @@ export function Protections() {
 
   const handlePunishmentChange = async (idx: number, tier: string) => {
     const updated = list.map((m: any, i: number) => (i === idx ? { ...m, action: tier } : m));
+    setList(updated);
+    await persist(updated);
+  };
+
+  const handleFieldChange = async (idx: number, fieldKey: string, value: string) => {
+    const updated = list.map((m: any, i: number) =>
+      i === idx ? { ...m, fieldOverrides: { ...m.fieldOverrides, [fieldKey]: value } } : m,
+    );
     setList(updated);
     await persist(updated);
   };
@@ -2730,11 +2668,108 @@ export function Protections() {
                   {t.triggersSuffix(p.triggers)}
                 </span>
               </div>
+
+              {(() => {
+                const luaKey = PROTECTION_MODULE_KEYS[p.name];
+                const camposDisponiveis = luaKey ? PROTECTION_MODULE_FIELDS[luaKey] : undefined;
+                if (!camposDisponiveis || camposDisponiveis.length === 0) return null;
+                return (
+                  <AvancadoModulo
+                    campos={camposDisponiveis}
+                    valores={p.fieldOverrides || {}}
+                    onSalvar={(fieldKey, valor) => handleFieldChange(idx, fieldKey, valor)}
+                  />
+                );
+              })()}
             </MriCard>
           );
         })}
       </div>
     </Panel>
+  );
+}
+
+function AvancadoModulo({
+  campos,
+  valores,
+  onSalvar,
+}: {
+  campos: { key: string; label: string; help: string }[];
+  valores: Record<string, string>;
+  onSalvar: (fieldKey: string, valor: string) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <div className="mt-3 border-t border-hairline pt-3">
+      <button
+        onClick={() => setAberto((v) => !v)}
+        className="flex w-full items-center justify-between text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <span>Avançado ({campos.length})</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", aberto && "rotate-180")} />
+      </button>
+      {aberto && (
+        <div className="mt-2 flex flex-col gap-2 rounded-lg bg-elevated p-2.5">
+          {campos.map((campo) => (
+            <CampoAvancadoWeb
+              key={campo.key}
+              campo={campo}
+              valorSalvo={valores[campo.key]}
+              onSalvar={onSalvar}
+            />
+          ))}
+          <p className="text-[10.5px] italic text-muted-foreground">
+            Aplica no próximo heartbeat do servidor (poucos segundos), sem precisar reiniciar.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CampoAvancadoWeb({
+  campo,
+  valorSalvo,
+  onSalvar,
+}: {
+  campo: { key: string; label: string; help: string };
+  valorSalvo?: string;
+  onSalvar: (fieldKey: string, valor: string) => void;
+}) {
+  const [valor, setValor] = useState(valorSalvo ?? "");
+  const sujo = valor !== (valorSalvo ?? "");
+
+  return (
+    <div className="flex items-start justify-between gap-3 text-[11px]">
+      <div className="min-w-0 flex-1">
+        <div className="text-foreground">{campo.label}</div>
+        <div className="mt-0.5 text-[10.5px] text-muted-foreground">{campo.help}</div>
+        {valorSalvo === undefined && (
+          <div className="mt-0.5 text-[10.5px] text-muted-foreground/70">
+            Ainda não ajustado - usando o padrão do arquivo .lua.
+          </div>
+        )}
+      </div>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <MriInput
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sujo && onSalvar(campo.key, valor)}
+          placeholder="valor"
+          className="w-20 rounded-md px-2 py-1 text-right text-[10.5px]"
+        />
+        {sujo && (
+          <MriButton
+            variant="ghost"
+            size="icon"
+            onClick={() => onSalvar(campo.key, valor)}
+            className="h-6 w-6 shrink-0 text-gold hover:bg-gold/10"
+          >
+            <Check className="h-3 w-3" />
+          </MriButton>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -2989,169 +3024,6 @@ export function Wall() {
         ))}
       </div>
     </Panel>
-  );
-}
-
-export function Spawner() {
-  const [logs, setLogs] = useState<any[]>([]);
-  const [history, setHistory] = useState<any[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [type, setType] = useState<"vehicle" | "item">("vehicle");
-  const [targetPassport, setTargetPassport] = useState("");
-  const [resource, setResource] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [reason, setReason] = useState("");
-  const activeId = localStorage.getItem("goat_active_server_id") || undefined;
-  const dialog = useDialog();
-  const { lang } = useLanguage();
-  const t = (lang === "pt" ? pt : en).spawner;
-  const SPAWN_STATUS_LABEL: Record<string, string> = {
-    pending: t.statusPending,
-    delivered: t.statusDelivered,
-    executed: t.statusExecuted,
-    failed: t.statusFailed,
-  };
-
-  const load = () => {
-    if (!activeId) return;
-    api.getServerAuditLogs(activeId).then((l) => setLogs(l));
-    api.getSpawnHistory(activeId).then((h) => setHistory(h));
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeId || !targetPassport || !resource) return;
-    setBusy(true);
-    try {
-      await api.createSpawnCommand(activeId, {
-        type,
-        targetPassport: Number(targetPassport),
-        model: type === "vehicle" ? resource : undefined,
-        item: type === "item" ? resource : undefined,
-        quantity: type === "item" ? Number(quantity) || 1 : undefined,
-        reason,
-      });
-      setResource("");
-      setReason("");
-      load();
-    } catch (err) {
-      console.error("Failed to create spawn command:", err);
-      await dialog.notify({
-        description: err instanceof Error ? err.message : t.errorSubmitFallback,
-        tone: "error",
-      });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="space-y-5">
-      <Panel title={t.panelTitle} desc={t.panelDesc}>
-        <form onSubmit={handleSubmit} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as "vehicle" | "item")}
-            className="rounded-xl border border-border bg-card/40 px-3 py-2.5 text-[12.5px] outline-none focus:border-foreground/40"
-          >
-            <option value="vehicle">{t.optionVehicle}</option>
-            <option value="item">{t.optionItem}</option>
-          </select>
-          <MriInput
-            value={targetPassport}
-            onChange={(e) => setTargetPassport(e.target.value)}
-            placeholder={t.placeholderPassport}
-            type="number"
-            required
-            className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40"
-          />
-          <MriInput
-            value={resource}
-            onChange={(e) => setResource(e.target.value)}
-            placeholder={type === "vehicle" ? t.placeholderModel : t.placeholderItem}
-            required
-            className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40"
-          />
-          {type === "item" ? (
-            <MriInput
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              placeholder={t.placeholderQuantity}
-              type="number"
-              min={1}
-              className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40"
-            />
-          ) : (
-            <MriInput
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder={t.placeholderReasonOptional}
-              className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40"
-            />
-          )}
-          <MriButton variant="primary" type="submit" disabled={busy} className="rounded-xl">
-            {t.sendCommand}
-          </MriButton>
-          {type === "item" && (
-            <MriInput
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder={t.placeholderReasonOptional}
-              className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40 sm:col-span-2 lg:col-span-5"
-            />
-          )}
-        </form>
-        {history.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-2">
-            {history.slice(0, 8).map((h: any) => (
-              <Tag
-                key={h._id}
-                tone={
-                  h.status === "failed"
-                    ? "critical"
-                    : h.status === "pending"
-                      ? "warning"
-                      : h.status === "executed" || h.status === "delivered"
-                        ? "success"
-                        : "neutral"
-                }
-              >
-                {h.type === "vehicle" ? h.payload?.model : h.payload?.item} · {t.passportLabel}{" "}
-                {h.targetPassport} · {SPAWN_STATUS_LABEL[h.status] || h.status}
-              </Tag>
-            ))}
-          </div>
-        )}
-      </Panel>
-      <Panel title={t.auditPanelTitle} desc={t.auditPanelDesc}>
-        <Toolbar placeholder={t.auditSearchPlaceholder} />
-        {logs.length === 0 ? (
-          <p className="py-6 text-center text-[12px] text-muted-foreground">{t.auditEmpty}</p>
-        ) : (
-          <Table
-            cols="1fr 1fr .8fr .8fr 1fr"
-            head={[t.colResource, t.colCategory, t.colPermission, t.colAudit, t.colDate]}
-            rows={logs.map((r: any) => [
-              <span className="font-mono text-[11.5px]" key="resource">
-                {r.resource}
-              </span>,
-              r.category,
-              <Tag key="perm">{r.permission}</Tag>,
-              <span className="text-muted-foreground" key="status">
-                {r.status}
-              </span>,
-              <span className="text-muted-foreground" key="date">
-                {formatDateTime(r.createdAt, lang)}
-              </span>,
-            ])}
-          />
-        )}
-      </Panel>
-    </div>
   );
 }
 
@@ -3875,7 +3747,6 @@ export const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
   "global-ban": () => <Bans globalOnly />,
   "ac-id": AcId,
   wall: Wall,
-  spawner: Spawner,
   wipe: Wipe,
   staff: Staff,
   permissoes: Permissions,
