@@ -4,6 +4,7 @@ import { Footer } from "@/components/goatlanding/Sections";
 import { FadeUp, FadeLeft, FadeRight } from "@/components/goatlanding/animations";
 import { api, type FounderItem } from "@/lib/goat-api";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { MriButton } from "@/components/ui/MriButton";
 
 const DISCORD_URL = "https://discord.gg/VpHaMPpEHZ";
 
@@ -201,14 +202,15 @@ export default function Empresa() {
             <p className="mx-auto mt-3 max-w-[440px] text-[13.5px] leading-[1.6] text-muted-foreground">
               {t.ctaBody}
             </p>
-            <a
-              href={DISCORD_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-7 inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-[13.5px] font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+            <MriButton
+              asChild
+              variant="solid"
+              className="mt-7 rounded-lg px-6 py-3 text-[13.5px] transition-transform hover:scale-[1.02] hover:brightness-100"
             >
-              {t.ctaDiscord}
-            </a>
+              <a href={DISCORD_URL} target="_blank" rel="noreferrer">
+                {t.ctaDiscord}
+              </a>
+            </MriButton>
           </FadeUp>
         </div>
       </section>

@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { SECTION_COMPONENTS } from "@/components/dashboard/sections";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { MriCard } from "@/components/ui/MriCard";
 
 const pt = {
   title: "Área não encontrada",
@@ -23,10 +24,10 @@ export default function DashboardSection() {
 
   if (!Component) {
     return (
-      <div className="rounded-2xl border border-border bg-card/30 p-10 text-center">
+      <MriCard className="rounded-2xl bg-card/30 p-10 text-center">
         <p className="text-[15px] font-semibold tracking-tight">{t.title}</p>
         <p className="mt-2 text-[13px] text-muted-foreground">{t.body}</p>
-      </div>
+      </MriCard>
     );
   }
   return <Component />;

@@ -5,6 +5,7 @@ import { ShieldCheck } from "lucide-react";
 import logoAsset from "@/assets/goat2.png";
 import { api } from "@/lib/goat-api";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { MriButton } from "@/components/ui/MriButton";
 
 type Copy = {
   pageTitle: string;
@@ -183,14 +184,15 @@ export default function AuthPage() {
               </div>
             )}
 
-            <button
+            <MriButton
+              variant="solid"
               onClick={handleDiscordClick}
               disabled={loading}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="mt-6 w-full rounded-xl py-3 text-sm"
             >
               <ShieldCheck className="h-4 w-4" />
               {loading ? t.connecting : t.continueWithDiscord}
-            </button>
+            </MriButton>
 
             <p className="mt-8 text-center text-[12px] leading-relaxed text-muted-foreground">
               {t.termsPrefix}{" "}

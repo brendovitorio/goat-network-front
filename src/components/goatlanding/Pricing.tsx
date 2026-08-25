@@ -6,6 +6,7 @@ import { api, ProductItem, PlanItem, productLogoUrl } from "@/lib/goat-api";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useTilt } from "@/animations/useTilt";
 import { cn } from "@/lib/utils";
+import { MriButton } from "@/components/ui/MriButton";
 
 const formatBRL = (amount: number) => `R$ ${amount.toFixed(2).replace(".", ",")}`;
 
@@ -166,18 +167,19 @@ function PlanCard({ plan, idx, t }: { plan: PlanItem; idx: number; t: Copy }) {
             {billingLabel(plan, t)}
           </p>
 
-          <a
-            href={`/checkout?plan=${plan.code}`}
+          <MriButton
+            asChild
+            variant={plan.badge ? "solid" : "outline"}
             className={cn(
-              "mt-7 flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-[13px] font-semibold transition-transform hover:scale-[1.02] hover:opacity-90",
-              plan.badge
-                ? "bg-gold text-primary-foreground"
-                : "border border-hairline bg-surface-2 text-foreground",
+              "mt-7 rounded-lg px-4 py-3 text-[13px] transition-transform hover:scale-[1.02] hover:opacity-90 hover:brightness-100",
+              !plan.badge && "border-hairline bg-surface-2 text-foreground hover:bg-surface-2 hover:text-foreground",
             )}
           >
-            {plan.mode === "subscription" ? t.subscribeNow : t.buyNow}{" "}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </a>
+            <a href={`/checkout?plan=${plan.code}`}>
+              {plan.mode === "subscription" ? t.subscribeNow : t.buyNow}{" "}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </MriButton>
 
           {plan.features.length > 0 && (
             <ul className="mt-7 space-y-3 border-t border-hairline pt-6">
@@ -244,12 +246,14 @@ export function Pricing() {
           </AnimatePresence>
           {selectedProduct && (
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <button
+              <MriButton
+                variant="outline"
+                size="sm"
                 onClick={() => setSelectedSlug(null)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-hairline bg-surface-2 px-3.5 py-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="rounded-lg border-hairline bg-surface-2 hover:bg-surface-2 hover:text-foreground"
               >
                 <ChevronLeft className="h-3.5 w-3.5" /> {t.allProducts}
-              </button>
+              </MriButton>
               {selectedProduct.slug === "goat-anticheat" && (
                 <a
                   href="/produtos/goat-anticheat"

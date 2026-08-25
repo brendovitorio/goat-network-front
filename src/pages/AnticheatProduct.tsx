@@ -9,6 +9,7 @@ import vetor01 from "@/assets/vetor01.png";
 import vetor02 from "@/assets/vetor02.png";
 import vetor03 from "@/assets/vetor03.png";
 import goatLoading from "@/assets/goatloading.png";
+import { MriButton } from "@/components/ui/MriButton";
 
 type FaqItem = { q: string; a: string };
 type SolutionCell = { title: string; body: string };
@@ -263,18 +264,20 @@ export default function AnticheatProductPage() {
               {t.heroParagraph}
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a
-                href="/products"
-                className="rounded-lg bg-primary px-6 py-3 text-[13.5px] font-semibold text-primary-foreground shadow-[0_0_0_1px_oklch(0.94_0.012_240/0.4)] transition-transform hover:scale-[1.02]"
+              <MriButton
+                asChild
+                variant="solid"
+                className="rounded-lg px-6 py-3 text-[13.5px] shadow-[0_0_0_1px_oklch(0.94_0.012_240/0.4)] transition-transform hover:scale-[1.02] hover:brightness-100"
               >
-                {t.ctaPricing}
-              </a>
-              <a
-                href="#modulos"
-                className="rounded-lg border border-hairline px-6 py-3 text-[13.5px] font-medium text-foreground/85 transition-colors hover:border-gold/40 hover:text-foreground"
+                <a href="/products">{t.ctaPricing}</a>
+              </MriButton>
+              <MriButton
+                asChild
+                variant="outline"
+                className="rounded-lg border-hairline px-6 py-3 text-[13.5px] text-foreground/85 hover:bg-transparent hover:border-gold/40 hover:text-foreground"
               >
-                {t.ctaModules}
-              </a>
+                <a href="#modulos">{t.ctaModules}</a>
+              </MriButton>
             </div>
           </FadeUp>
 

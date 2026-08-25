@@ -7,6 +7,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { cn } from "@/lib/utils";
 import { usePrefersReducedMotion } from "@/animations/useReducedMotion";
 import { Magnetic } from "@/animations/Magnetic";
+import { MriButton } from "@/components/ui/MriButton";
 
 const clampAbs = (v: number, max: number) => Math.max(-max, Math.min(max, v));
 
@@ -109,14 +110,15 @@ export function FAQ() {
           <div className="border-t border-hairline p-8">
             <p className="text-[14px] font-semibold">{t.stillHaveQuestions}</p>
             <p className="mt-1.5 text-[13px] text-muted-foreground">{t.talkToTeam}</p>
-            <a
-              href="https://discord.gg/VpHaMPpEHZ"
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 inline-flex rounded-md border border-hairline bg-surface-2 px-4 py-2 text-[12.5px] font-medium transition-colors hover:border-gold/40"
+            <MriButton
+              asChild
+              variant="outline"
+              className="mt-5 inline-flex rounded-md border-hairline bg-surface-2 px-4 py-2 text-[12.5px] hover:border-gold/40 hover:bg-surface-2 hover:text-foreground"
             >
-              {t.joinDiscord}
-            </a>
+              <a href="https://discord.gg/VpHaMPpEHZ" target="_blank" rel="noreferrer">
+                {t.joinDiscord}
+              </a>
+            </MriButton>
           </div>
         </FadeLeft>
         <div>
@@ -259,12 +261,15 @@ export function CTA() {
           className="mt-7 inline-block"
         >
           <Magnetic max={5}>
-            <a
-              href="/products"
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-[13.5px] font-medium text-primary-foreground transition-colors hover:opacity-90"
+            <MriButton
+              asChild
+              variant="solid"
+              className="rounded-lg px-5 py-2.5 text-[13.5px] hover:opacity-90 hover:brightness-100"
             >
-              {t.viewProducts} <ArrowRight className="h-3.5 w-3.5" />
-            </a>
+              <a href="/products">
+                {t.viewProducts} <ArrowRight className="h-3.5 w-3.5" />
+              </a>
+            </MriButton>
           </Magnetic>
         </motion.div>
       </div>

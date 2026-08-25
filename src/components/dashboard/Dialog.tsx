@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { MriButton } from "@/components/ui/MriButton";
+import { MriInput, MriTextarea } from "@/components/ui/MriInput";
 
 type Copy = {
   confirmLabel: string;
@@ -284,49 +286,43 @@ function DialogModal({
               </p>
             )}
           </div>
-          <button
+          <MriButton
+            variant="ghost"
+            size="icon"
             onClick={onCancel}
             aria-label={t.closeAria}
-            className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="rounded-md"
           >
             <X className="h-4 w-4" />
-          </button>
+          </MriButton>
         </div>
 
         <div className="space-y-4 px-5 py-4">
           {request.kind === "form" &&
-            request.fields.map((f, i) => (
-              <label key={f.key} className="block">
-                {f.label && (
-                  <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                    {f.label}
-                  </span>
-                )}
-                {f.multiline ? (
-                  <textarea
-                    ref={
-                      i === 0 ? (firstFieldRef as React.RefObject<HTMLTextAreaElement>) : undefined
-                    }
-                    value={values[f.key] ?? ""}
-                    onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
-                    placeholder={f.placeholder}
-                    rows={3}
-                    className="w-full resize-none rounded-lg border border-border bg-card/60 px-3 py-2 text-[13px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-gold/50"
-                  />
-                ) : (
-                  <input
-                    ref={i === 0 ? (firstFieldRef as React.RefObject<HTMLInputElement>) : undefined}
-                    value={values[f.key] ?? ""}
-                    onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !hasEmptyRequired) onConfirm();
-                    }}
-                    placeholder={f.placeholder}
-                    className="w-full rounded-lg border border-border bg-card/60 px-3 py-2 text-[13px] text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-gold/50"
-                  />
-                )}
-              </label>
-            ))}
+            request.fields.map((f, i) =>
+              f.multiline ? (
+                <MriTextarea
+                  key={f.key}
+                  ref={i === 0 ? (firstFieldRef as React.RefObject<HTMLTextAreaElement>) : undefined}
+                  label={f.label}
+                  value={values[f.key] ?? ""}
+                  onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                  placeholder={f.placeholder}
+                />
+              ) : (
+                <MriInput
+                  key={f.key}
+                  ref={i === 0 ? (firstFieldRef as React.RefObject<HTMLInputElement>) : undefined}
+                  label={f.label}
+                  value={values[f.key] ?? ""}
+                  onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !hasEmptyRequired) onConfirm();
+                  }}
+                  placeholder={f.placeholder}
+                />
+              ),
+            )}
 
           {request.kind === "notify" && (
             <p
@@ -342,25 +338,17 @@ function DialogModal({
 
         <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
           {request.kind !== "notify" && (
-            <button
-              onClick={onCancel}
-              className="rounded-lg px-3.5 py-2 text-[12.5px] font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
+            <MriButton variant="ghost" onClick={onCancel}>
               {request.cancelLabel}
-            </button>
+            </MriButton>
           )}
-          <button
+          <MriButton
+            variant={danger ? "destructive" : "solid"}
             onClick={onConfirm}
             disabled={hasEmptyRequired}
-            className={cn(
-              "rounded-lg px-3.5 py-2 text-[12.5px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40",
-              danger
-                ? "bg-destructive text-destructive-foreground hover:brightness-110"
-                : "bg-gold text-primary-foreground hover:brightness-110",
-            )}
           >
             {request.kind === "notify" ? t.gotIt : request.confirmLabel}
-          </button>
+          </MriButton>
         </div>
       </motion.div>
     </div>

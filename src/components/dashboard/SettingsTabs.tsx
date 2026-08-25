@@ -10,16 +10,19 @@ import {
   Monitor,
   Check,
   Loader2,
-  X,
   Globe,
   Lock,
   Smartphone,
   Activity,
 } from "lucide-react";
 import { api, ServerItem, LicenseItem, resolveLicenseForServer } from "@/lib/goat-api";
-import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { formatDate } from "@/lib/format";
+import { useDialog } from "./Dialog";
+import { MriCard } from "@/components/ui/MriCard";
+import { MriButton } from "@/components/ui/MriButton";
+import { MriInput } from "@/components/ui/MriInput";
+import { MriTabs, type MriTabItem } from "@/components/ui/MriTabs";
 
 type Copy = {
   loading: string;
@@ -228,18 +231,13 @@ const en: Copy = {
 export function SettingsTabs() {
   const { lang } = useLanguage();
   const t = lang === "pt" ? pt : en;
+  const dialog = useDialog();
   const [activeTab, setActiveTab] = useState("informacoes");
   const [allServers, setAllServers] = useState<ServerItem[]>([]);
   const [server, setServer] = useState<ServerItem | null>(null);
   const [license, setLicense] = useState<LicenseItem | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [modalField, setModalField] = useState<{
-    key: string;
-    label: string;
-    value: string;
-  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [profileData, setProfileData] = useState({
@@ -302,12 +300,12 @@ export function SettingsTabs() {
     };
   }, []);
 
-  const tabs = [
-    { id: "informacoes", label: "Informações", icon: User },
-    { id: "seguranca", label: "Segurança", icon: Shield },
-    { id: "licenca", label: "Licença", icon: BadgeCheck },
-    { id: "integracoes", label: "Integrações", icon: Bell },
-    { id: "faturas", label: "Faturas", icon: CreditCard },
+  const tabs: MriTabItem[] = [
+    { id: "informacoes", label: t.tabInformacoes, icon: User },
+    { id: "seguranca", label: t.tabSeguranca, icon: Shield },
+    { id: "licenca", label: t.tabLicenca, icon: BadgeCheck },
+    { id: "integracoes", label: t.tabIntegracoes, icon: Bell },
+    { id: "faturas", label: t.tabFaturas, icon: CreditCard },
   ];
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -331,26 +329,29 @@ export function SettingsTabs() {
     reader.readAsDataURL(file);
   };
 
-  const handleSaveModal = async () => {
-    if (!modalField || !server) return;
-
-    setSaving(true);
+  const handleEditField = async (key: string, label: string, value: string) => {
+    if (!server) return;
+    const nextValue = await dialog.prompt({
+      title: `${t.changeModalPrefix} ${label}`,
+      label,
+      defaultValue: value,
+      confirmLabel: t.save,
+      cancelLabel: t.cancel,
+    });
+    if (nextValue === null) return;
 
     try {
       const payload: Record<string, string> = {};
-      if (modalField.key === "nome") payload.name = modalField.value;
-      if (modalField.key === "descricao") payload.description = modalField.value;
+      if (key === "nome") payload.name = nextValue;
+      if (key === "descricao") payload.description = nextValue;
 
       if (Object.keys(payload).length > 0) {
         await api.updateServerGeneral(server._id, payload);
         setServer({ ...server, ...payload });
-        setProfileData((prev) => ({ ...prev, [modalField.key]: modalField.value }));
+        setProfileData((prev) => ({ ...prev, [key]: nextValue }));
       }
     } catch (error) {
       console.error("Erro ao salvar campo:", error);
-    } finally {
-      setSaving(false);
-      setModalField(null);
     }
   };
 
@@ -409,28 +410,7 @@ export function SettingsTabs() {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 border-b border-hairline pb-2">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "relative flex items-center gap-2 border px-3 py-2 text-[12.5px] font-medium transition-colors",
-                isActive
-                  ? "border-hairline bg-elevated text-foreground"
-                  : "border-transparent text-muted-foreground hover:border-hairline hover:bg-elevated/60 hover:text-foreground/75",
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      <MriTabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
       <div className="w-full pt-1">
         <AnimatePresence mode="wait">
@@ -446,7 +426,7 @@ export function SettingsTabs() {
               <InformacoesTab
                 profileData={profileData}
                 server={server}
-                onOpenEdit={(key, label, value) => setModalField({ key, label, value })}
+                onOpenEdit={handleEditField}
                 onTriggerFileUpload={() => fileInputRef.current?.click()}
               />
             )}
@@ -459,45 +439,6 @@ export function SettingsTabs() {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {modalField && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-xl border border-hairline bg-background p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">Alterar {modalField.label}</h3>
-              <button
-                onClick={() => setModalField(null)}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <input
-              type="text"
-              value={modalField.value}
-              onChange={(e) => setModalField({ ...modalField, value: e.target.value })}
-              className="w-full rounded-md border border-hairline bg-secondary px-4 py-2.5 text-xs text-foreground outline-none focus:border-gold/40"
-              autoFocus
-            />
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setModalField(null)}
-                className="rounded-md px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSaveModal}
-                disabled={saving}
-                className="flex items-center gap-1.5 rounded-md bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground hover:brightness-110 disabled:opacity-50"
-              >
-                {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                Salvar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -515,9 +456,12 @@ function InformacoesTab({
 }) {
   const logo = profileData.logoUrl || server?.logo;
 
+  const { lang } = useLanguage();
+  const t = lang === "pt" ? pt : en;
+
   return (
     <div className="space-y-4 w-full">
-      <div className="w-full rounded-xl border border-white/[0.07] bg-background p-6 shadow-sm">
+      <MriCard className="w-full p-6 shadow-sm">
         <div className="flex items-center gap-5">
           <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-hairline bg-elevated/60 text-muted-foreground shadow-inner shrink-0">
             {logo ? (
@@ -535,54 +479,62 @@ function InformacoesTab({
             <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
               {profileData.descricao}
             </p>
-            <button
+            <MriButton
+              variant="ghost"
+              size="sm"
               onClick={onTriggerFileUpload}
-              className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+              className="mt-3 px-0 py-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
             >
               <Upload className="h-3.5 w-3.5" />
-              Trocar logo
-            </button>
+              {t.changeLogo}
+            </MriButton>
           </div>
         </div>
-      </div>
+      </MriCard>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-        <div className="rounded-xl border border-white/[0.07] bg-background p-5 space-y-4">
+        <MriCard className="p-5 space-y-4">
           <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground block">
-            Informações
+            {t.infoSectionLabel}
           </span>
 
           <InfoRow
-            label="Nome"
+            label={t.fieldName}
             value={server?.name || profileData.nome}
-            onEdit={() => onOpenEdit("nome", "Nome", server?.name || profileData.nome)}
+            onEdit={() => onOpenEdit("nome", t.fieldName, server?.name || profileData.nome)}
           />
           <InfoRow
-            label="Descrição"
+            label={t.fieldDescription}
             value={server?.description || profileData.descricao}
             onEdit={() =>
-              onOpenEdit("descricao", "Descrição", server?.description || profileData.descricao)
+              onOpenEdit(
+                "descricao",
+                t.fieldDescription,
+                server?.description || profileData.descricao,
+              )
             }
           />
-          <InfoRow label="Status" value={server?.status ? server.status.toUpperCase() : "ONLINE"} />
-        </div>
+          <InfoRow label={t.fieldStatus} value={server?.status ? server.status.toUpperCase() : "ONLINE"} />
+        </MriCard>
 
-        <div className="rounded-xl border border-white/[0.07] bg-background p-5 space-y-4">
+        <MriCard className="p-5 space-y-4">
           <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground block">
-            Servidor
+            {t.serverSectionLabel}
           </span>
 
-          <InfoRow label="IP" value={server?.ip || "127.0.0.1"} />
-          <InfoRow label="Porta" value={String(server?.port || 30120)} />
-          <InfoRow label="CFX" value={server?.cfxCode || "—"} />
-          <InfoRow label="Plano" value={String(server?.plan || "pro").toUpperCase()} />
-        </div>
+          <InfoRow label={t.fieldIp} value={server?.ip || "127.0.0.1"} />
+          <InfoRow label={t.fieldPort} value={String(server?.port || 30120)} />
+          <InfoRow label={t.fieldCfx} value={server?.cfxCode || "—"} />
+          <InfoRow label={t.fieldPlan} value={String(server?.plan || "pro").toUpperCase()} />
+        </MriCard>
       </div>
     </div>
   );
 }
 
 function SegurancaTab({ server }: { server: ServerItem | null }) {
+  const { lang } = useLanguage();
+  const t = lang === "pt" ? pt : en;
   const [keyCopied, setKeyCopied] = useState(false);
   const [newIp, setNewIp] = useState("");
   const [busy, setBusy] = useState(false);
@@ -616,73 +568,67 @@ function SegurancaTab({ server }: { server: ServerItem | null }) {
 
   return (
     <div className="w-full space-y-4">
-      <div className="rounded-xl border border-white/[0.07] bg-background p-6 space-y-6">
+      <MriCard className="w-full p-6 space-y-6">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Segurança</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            2FA, IP Allowlist, sessões e dispositivos validados pelo backend.
-          </p>
+          <h3 className="text-sm font-semibold text-foreground">{t.securityTitle}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{t.securitySubtitle}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-4">
           <MetricBox
-            label="2FA"
-            value={server?.security?.twoFactorEnabled ? "Ativado" : "Não configurado"}
+            label={t.metric2fa}
+            value={server?.security?.twoFactorEnabled ? t.enabled : t.notConfigured}
             icon={Lock}
           />
-          <MetricBox label="IP Allowlist" value={`${allowedIps.length} IPs`} icon={Globe} />
-          <MetricBox label="Sessões" value={`${accessLogs.length}`} icon={Smartphone} />
-          <MetricBox label="Dispositivos" value={`${allowedIps.length || 0}`} icon={Activity} />
+          <MetricBox label={t.metricIpAllowlist} value={`${allowedIps.length} IPs`} icon={Globe} />
+          <MetricBox label={t.metricSessions} value={`${accessLogs.length}`} icon={Smartphone} />
+          <MetricBox label={t.metricDevices} value={`${allowedIps.length || 0}`} icon={Activity} />
         </div>
 
-        <div className="rounded-xl border border-hairline bg-elevated/60 p-4 flex items-center justify-between gap-4">
+        <MriCard className="flex items-center justify-between gap-4 border-hairline bg-elevated/60">
           <div>
             <span className="text-[11px] font-semibold uppercase text-muted-foreground">
-              LICENSE ID
+              {t.licenseIdLabel}
             </span>
             <p className="text-xs font-mono text-emerald-400 mt-1 break-all">
               {server?.licenseKey || "—"}
             </p>
           </div>
-          <button
+          <MriButton
+            variant="outline"
+            size="sm"
             onClick={() => {
               navigator.clipboard.writeText(server?.licenseKey || "");
               setKeyCopied(true);
               setTimeout(() => setKeyCopied(false), 2000);
             }}
-            className="rounded-md border border-hairline bg-elevated px-4 py-1.5 text-xs text-foreground/75 hover:bg-secondary hover:text-foreground transition-colors"
           >
-            {keyCopied ? "Copiado!" : "Copiar"}
-          </button>
-        </div>
+            {keyCopied ? t.copied : t.copyBtn}
+          </MriButton>
+        </MriCard>
 
-        <div className="rounded-xl border border-hairline bg-elevated/60 p-4 space-y-3">
+        <MriCard className="space-y-3 border-hairline bg-elevated/60">
           <div className="flex items-center justify-between gap-3">
             <h4 className="text-[11px] font-semibold uppercase text-muted-foreground">
-              Allowlist de IPs
+              {t.ipAllowlistHeading}
             </h4>
-            <span className="text-[10px] text-muted-foreground">Persistido no backend</span>
+            <span className="text-[10px] text-muted-foreground">{t.persistedBackend}</span>
           </div>
 
           <div className="flex gap-2">
-            <input
-              type="text"
+            <MriInput
               value={newIp}
               onChange={(e) => setNewIp(e.target.value)}
-              placeholder="Ex.: 45.12.54.90"
-              className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-xs text-foreground outline-none focus:border-gold/40"
+              placeholder={t.ipPlaceholder}
+              className="rounded-md bg-background px-3 py-2 text-xs"
             />
-            <button
-              onClick={addIp}
-              disabled={busy}
-              className="rounded-md border border-hairline bg-secondary px-3 py-2 text-[11px] font-medium text-foreground hover:bg-secondary disabled:opacity-50"
-            >
-              Adicionar
-            </button>
+            <MriButton variant="outline" size="sm" onClick={addIp} disabled={busy}>
+              {t.add}
+            </MriButton>
           </div>
 
           {allowedIps.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Nenhum IP autorizado cadastrado.</p>
+            <p className="text-xs text-muted-foreground">{t.noAuthorizedIps}</p>
           ) : (
             <div className="space-y-2">
               {allowedIps.map((ip) => (
@@ -695,14 +641,14 @@ function SegurancaTab({ server }: { server: ServerItem | null }) {
                     onClick={() => removeIp(ip)}
                     className="text-[10px] uppercase tracking-[0.12em] text-red-400 hover:text-red-300"
                   >
-                    Remover
+                    {t.remove}
                   </button>
                 </div>
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </MriCard>
+      </MriCard>
     </div>
   );
 }
@@ -714,6 +660,8 @@ function LicencaTab({
   server: ServerItem | null;
   license: LicenseItem | null;
 }) {
+  const { lang } = useLanguage();
+  const t = lang === "pt" ? pt : en;
   const formatDate = (raw?: string) => {
     if (!raw) return "—";
     const date = new Date(raw);
@@ -722,29 +670,31 @@ function LicencaTab({
   };
 
   return (
-    <div className="w-full rounded-xl border border-white/[0.07] bg-background p-6 space-y-6">
+    <MriCard className="w-full p-6 space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Licença</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Dados ativos vindos do backend.</p>
+          <h3 className="text-sm font-semibold text-foreground">{t.licenseTitle}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{t.licenseSubtitle}</p>
         </div>
         <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-emerald-300">
-          {license?.status === "active" ? "Ativada" : license?.status || "Ativada"}
+          {license?.status === "active" ? t.licenseActive : license?.status || t.licenseActive}
         </span>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <StatTile label="LICENSE ID" value={license?.key || server?.licenseKey || "—"} />
-        <StatTile label="Plano" value={(license?.plan || server?.plan || "pro").toUpperCase()} />
-        <StatTile label="Ativada em" value={formatDate(license?.createdAt || server?.createdAt)} />
-        <StatTile label="Validade" value={license ? formatDate(license.expiresAt) : "Vitalícia"} />
-        <StatTile label="Servidores" value="1 de 1" />
+        <StatTile label={t.licenseIdLabel} value={license?.key || server?.licenseKey || "—"} />
+        <StatTile label={t.planLabel} value={(license?.plan || server?.plan || "pro").toUpperCase()} />
+        <StatTile label={t.activatedOn} value={formatDate(license?.createdAt || server?.createdAt)} />
+        <StatTile label={t.validity} value={license ? formatDate(license.expiresAt) : t.lifetime} />
+        <StatTile label={t.serversLabel} value={t.serversCount} />
       </div>
-    </div>
+    </MriCard>
   );
 }
 
 function IntegracoesTab({ server, setServer }: { server: ServerItem | null; setServer: any }) {
+  const { lang } = useLanguage();
+  const t = lang === "pt" ? pt : en;
   const [webhook, setWebhook] = useState(server?.notifications?.discordWebhook || "");
   const [saving, setSaving] = useState(false);
 
@@ -776,103 +726,98 @@ function IntegracoesTab({ server, setServer }: { server: ServerItem | null; setS
 
   return (
     <div className="w-full space-y-4">
-      <div className="rounded-xl border border-white/[0.07] bg-background p-6 space-y-6">
+      <MriCard className="w-full p-6 space-y-6">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Integrações</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Discord Webhook, API, logs e serviços externos conectados ao backend.
-          </p>
+          <h3 className="text-sm font-semibold text-foreground">{t.integrationsTitle}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{t.integrationsSubtitle}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-hairline bg-elevated/60 p-4 space-y-2">
+          <MriCard className="space-y-2 border-hairline bg-elevated/60">
             <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-              Discord Webhook
+              {t.discordWebhookLabel}
             </p>
-            <input
+            <MriInput
               value={webhook}
               onChange={(e) => setWebhook(e.target.value)}
               placeholder="https://discord.com/api/webhooks/..."
-              className="w-full rounded-md border border-hairline bg-background px-3 py-2 text-xs text-foreground outline-none focus:border-gold/40"
+              className="rounded-md bg-background px-3 py-2 text-xs"
             />
-          </div>
+          </MriCard>
 
-          <div className="rounded-xl border border-hairline bg-elevated/60 p-4 space-y-2">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">API</p>
+          <MriCard className="space-y-2 border-hairline bg-elevated/60">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              {t.apiLabel}
+            </p>
             <p className="text-xs font-mono text-emerald-400 break-all">
               {server?.licenseKey || "—"}
             </p>
-          </div>
+          </MriCard>
 
-          <div className="rounded-xl border border-hairline bg-elevated/60 p-4 space-y-2">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Logs</p>
-            <p className="text-sm font-semibold text-foreground">
-              {server?.security?.accessLogs?.length || 0} registros
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-hairline bg-elevated/60 p-4 space-y-2">
+          <MriCard className="space-y-2 border-hairline bg-elevated/60">
             <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-              Serviços externos
+              {t.logsLabel}
             </p>
             <p className="text-sm font-semibold text-foreground">
-              {server?.notifications?.alerts?.critical ? "Ativos" : "Desativados"}
+              {server?.security?.accessLogs?.length || 0} {t.logsCountSuffix}
             </p>
-          </div>
+          </MriCard>
+
+          <MriCard className="space-y-2 border-hairline bg-elevated/60">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              {t.externalServicesLabel}
+            </p>
+            <p className="text-sm font-semibold text-foreground">
+              {server?.notifications?.alerts?.critical ? t.servicesActive : t.servicesDisabled}
+            </p>
+          </MriCard>
         </div>
 
         <div className="flex justify-end pt-2">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 rounded-md bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground hover:brightness-110 transition-colors disabled:opacity-50"
-          >
+          <MriButton variant="primary" onClick={handleSave} disabled={saving}>
             {saving ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <Check className="h-3.5 w-3.5" />
             )}
-            Salvar Integração
-          </button>
+            {t.saveIntegration}
+          </MriButton>
         </div>
-      </div>
+      </MriCard>
     </div>
   );
 }
 
 export function FaturasTab({ orders }: { orders: any[] }) {
+  const { lang } = useLanguage();
+  const t = lang === "pt" ? pt : en;
   return (
-    <div className="w-full rounded-xl border border-white/[0.07] bg-background p-6 space-y-4">
+    <MriCard className="w-full p-6 space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">Faturas</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Histórico real de pedidos do backend.
-          </p>
+          <h3 className="text-sm font-semibold text-foreground">{t.invoicesTitle}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">{t.invoicesSubtitle}</p>
         </div>
         <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-          {orders.length} itens
+          {orders.length} {t.itemsSuffix}
         </span>
       </div>
 
       {orders.length === 0 ? (
         <div className="rounded-xl border border-dashed border-hairline bg-elevated/60 p-5 text-sm text-muted-foreground">
-          Nenhuma fatura encontrada.
+          {t.noInvoicesFound}
         </div>
       ) : (
         <div className="space-y-3">
           {orders.map((order) => (
-            <div
-              key={order._id || order.orderId}
-              className="rounded-xl border border-hairline bg-elevated/60 p-4"
-            >
+            <MriCard key={order._id || order.orderId} className="border-hairline bg-elevated/60">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                     #{order.orderId || order._id}
                   </p>
                   <p className="mt-1 text-sm font-semibold text-foreground">
-                    {order.serverName || "Servidor"}
+                    {order.serverName || t.serverFallback}
                   </p>
                 </div>
                 <div className="text-left md:text-right">
@@ -885,20 +830,22 @@ export function FaturasTab({ orders }: { orders: any[] }) {
                 </div>
               </div>
               <div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline pt-3">
-                <span className="text-xs text-muted-foreground">Status</span>
+                <span className="text-xs text-muted-foreground">{t.statusLabel}</span>
                 <span className="rounded-md border border-hairline bg-elevated px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-foreground/75">
                   {order.status || "approved"}
                 </span>
               </div>
-            </div>
+            </MriCard>
           ))}
         </div>
       )}
-    </div>
+    </MriCard>
   );
 }
 
 function InfoRow({ label, value, onEdit }: { label: string; value: string; onEdit?: () => void }) {
+  const { lang } = useLanguage();
+  const t = lang === "pt" ? pt : en;
   return (
     <div className="flex items-center justify-between gap-3 py-1">
       <div>
@@ -906,12 +853,9 @@ function InfoRow({ label, value, onEdit }: { label: string; value: string; onEdi
         <p className="mt-1 text-xs text-foreground/90 break-words">{value || "—"}</p>
       </div>
       {onEdit && (
-        <button
-          onClick={onEdit}
-          className="rounded-md border border-hairline bg-elevated px-3 py-1.5 text-[10px] font-medium text-foreground/75 hover:bg-secondary hover:text-foreground"
-        >
-          Alterar
-        </button>
+        <MriButton variant="outline" size="sm" onClick={onEdit} className="rounded-md text-[10px]">
+          {t.change}
+        </MriButton>
       )}
     </div>
   );
@@ -927,21 +871,21 @@ function MetricBox({
   icon: typeof Lock;
 }) {
   return (
-    <div className="rounded-xl border border-hairline bg-elevated/60 p-4">
+    <MriCard className="border-hairline bg-elevated/60">
       <div className="flex items-center gap-2 text-muted-foreground">
         <Icon className="h-4 w-4" />
         <p className="text-[10px] uppercase tracking-[0.14em]">{label}</p>
       </div>
       <p className="mt-3 text-sm font-semibold text-foreground">{value}</p>
-    </div>
+    </MriCard>
   );
 }
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-hairline bg-elevated/60 p-4">
+    <MriCard className="border-hairline bg-elevated/60">
       <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
       <p className="mt-2 text-sm font-semibold text-foreground break-all">{value}</p>
-    </div>
+    </MriCard>
   );
 }

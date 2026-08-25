@@ -13,7 +13,6 @@ import {
   ArrowUpRight,
   CircleDollarSign,
   Sparkles,
-  ChevronDown,
   Users,
   Bug,
   Activity,
@@ -25,6 +24,13 @@ import {
   Trash2,
 } from "lucide-react";
 import { Panel, Stat, Table, Tag, TAG_TONE_CLASS } from "./shell";
+import { MriButton } from "@/components/ui/MriButton";
+import { MriCard } from "@/components/ui/MriCard";
+import { MriSearchInput } from "@/components/ui/MriSearchInput";
+import { MriInput } from "@/components/ui/MriInput";
+import { MriToggle } from "@/components/ui/MriToggle";
+import { MriPunishmentSelect } from "@/components/ui/MriPunishmentSelect";
+import { toneForAction } from "@/components/ui/mri-badge-variants";
 import { api, ServerStatus, LicenseItem, resolveLicenseForServer } from "@/lib/goat-api";
 import { cn } from "@/lib/utils";
 import { VolumeChart } from "@/goatdash/VolumeChart";
@@ -1165,80 +1171,34 @@ function Toolbar({
 
   return (
     <div className="mb-5 flex flex-wrap items-center gap-2">
-      <div className="relative min-w-[240px] flex-1">
-        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-        <input
-          value={value}
-          onChange={(e) => onChange && onChange(e.target.value)}
-          placeholder={placeholder}
-          className="w-full rounded-xl border border-border bg-card/40 py-2.5 pl-9 pr-3 text-[12.5px] outline-none transition-colors placeholder:text-muted-foreground focus:border-foreground/40"
-        />
-      </div>
-      <button
+      <MriSearchInput
+        value={value}
+        onChange={(val) => onChange && onChange(val)}
+        placeholder={placeholder}
+        className="min-w-[240px] flex-1"
+      />
+      <MriButton
+        variant="outline"
         onClick={handleExportClick}
         disabled={!onExport || exporting}
         title={onExport ? undefined : t.exportUnavailable}
-        className="flex items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-[12.5px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
+        className="rounded-xl"
       >
         <Download className={cn("h-3.5 w-3.5", exporting && "animate-pulse")} />
         {exporting ? t.generatingSheet : t.exportExcel}
-      </button>
+      </MriButton>
     </div>
   );
 }
 
-function punishmentTone(punishment: string): "critical" | "warning" | "gold" | "neutral" {
-  const p = (punishment || "").toLowerCase();
-  if (p.includes("ban")) return "critical";
-  if (p.includes("kick")) return "warning";
-  if (p.includes("flag")) return "gold";
-  return "neutral";
-}
+// punishmentTone/moduleActionTone agora vivem no kit (toneForAction em
+// components/ui/mri-badge-variants.ts) - mantidos aqui como alias pra não
+// exigir troca de nome em cada call site deste arquivo.
+const punishmentTone = toneForAction;
+const moduleActionTone = toneForAction;
 
-function moduleActionTone(action: string): "critical" | "warning" | "gold" | "neutral" {
-  const a = (action || "").toLowerCase();
-  if (a.includes("ban")) return "critical";
-  if (a.includes("kick")) return "warning";
-  if (a.includes("flag") || a.includes("alerta")) return "gold";
-  return "neutral";
-}
-
-function PunishmentSelect({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (tier: string) => void;
-}) {
-  const tone = moduleActionTone(value);
-  return (
-    <div className="group/psel relative">
-      <button
-        className={cn(
-          "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10.5px] font-medium transition-colors",
-          TAG_TONE_CLASS[tone],
-        )}
-      >
-        {value}
-        <ChevronDown className="h-3 w-3 opacity-60" />
-      </button>
-      <div className="invisible absolute left-0 top-full z-10 mt-1 w-20 rounded-md border border-hairline bg-popover p-1 opacity-0 shadow-xl transition-opacity group-focus-within/psel:visible group-focus-within/psel:opacity-100 group-hover/psel:visible group-hover/psel:opacity-100">
-        {PUNISHMENT_TIERS.map((tier) => (
-          <button
-            key={tier}
-            onClick={() => onChange(tier)}
-            className={cn(
-              "block w-full rounded px-2 py-1 text-left text-[11px] transition-colors hover:bg-secondary",
-              tier === value ? "text-foreground font-medium" : "text-muted-foreground",
-            )}
-          >
-            {tier}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+// Movido pro kit compartilhado (components/ui/MriPunishmentSelect.tsx).
+const PunishmentSelect = MriPunishmentSelect;
 
 function formatDuration(ms: number, lang: Lang): string {
   if (ms <= 0) return "0h 0m";
@@ -1393,13 +1353,14 @@ export function Home() {
           </h1>
           <p className="mt-2 text-[13px] text-muted-foreground">{t.subtitle}</p>
         </div>
-        <button
+        <MriButton
+          variant="primary"
           onClick={() => setReportOpen(true)}
-          className="flex items-center gap-2 rounded-full border border-gold/25 bg-gold/10 px-4 py-2 text-[12px] font-medium text-gold transition-colors hover:border-gold/40 hover:bg-gold/15"
+          className="rounded-full border-gold/25 px-4 py-2 text-[12px] hover:border-gold/40"
         >
           <Sparkles className="h-3.5 w-3.5" />
           {t.generateReport}
-        </button>
+        </MriButton>
       </div>
 
       <SecurityReportModal
@@ -1418,7 +1379,7 @@ export function Home() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground/20">
+        <MriCard className="bg-card p-5 hover:border-foreground/20">
           <div className="flex items-start justify-between">
             <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
               <span className="h-[3px] w-[3px] rounded-[1px] bg-gold/70" />
@@ -1434,9 +1395,9 @@ export function Home() {
           <p className={"mt-2 text-[11px] flex items-center gap-1 " + healthColor}>
             <span className={"h-1.5 w-1.5 rounded-full " + pulseColor} /> {pulseText}
           </p>
-        </div>
+        </MriCard>
 
-        <div className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground/20">
+        <MriCard className="bg-card p-5 hover:border-foreground/20">
           <div className="flex items-start justify-between">
             <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
               <span className="h-[3px] w-[3px] rounded-[1px] bg-gold/70" />
@@ -1453,9 +1414,9 @@ export function Home() {
             <span className="text-foreground font-medium tabular-nums">{detectionsCount}</span>{" "}
             {t.interceptedActionsSuffix}
           </p>
-        </div>
+        </MriCard>
 
-        <div className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground/20">
+        <MriCard className="bg-card p-5 hover:border-foreground/20">
           <div className="flex items-start justify-between">
             <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
               <span className="h-[3px] w-[3px] rounded-[1px] bg-gold/70" />
@@ -1472,9 +1433,9 @@ export function Home() {
             <span className="text-foreground font-medium tabular-nums">{realBans.length}</span>{" "}
             {t.registeredOnServerSuffix}
           </p>
-        </div>
+        </MriCard>
 
-        <div className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground/20">
+        <MriCard className="bg-card p-5 hover:border-foreground/20">
           <div className="flex items-start justify-between">
             <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
               <span className="h-[3px] w-[3px] rounded-[1px] bg-gold/70" />
@@ -1498,7 +1459,7 @@ export function Home() {
             {healthText}
           </p>
           <p className="mt-2 text-[11px] text-muted-foreground">{healthDesc}</p>
-        </div>
+        </MriCard>
       </div>
 
       <Panel
@@ -1913,10 +1874,7 @@ export function Evidence() {
         <Toolbar placeholder={t.searchPlaceholder} />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {realDetections.map((d: any) => (
-            <div
-              key={d.id}
-              className="group rounded-xl border border-border p-4 transition-colors hover:border-foreground/30 hover:bg-elevated"
-            >
+            <MriCard key={d.id} interactive className="group">
               <div className="grain relative mb-4 h-28 overflow-hidden rounded-lg border border-border bg-background">
                 {d.evidenceImage ? (
                   <img
@@ -1952,7 +1910,7 @@ export function Evidence() {
                   <span className="text-[11.5px] text-muted-foreground/50">{t.noImage}</span>
                 )}
               </div>
-            </div>
+            </MriCard>
           ))}
         </div>
       </Panel>
@@ -2047,13 +2005,9 @@ export function Bans({ globalOnly }: { globalOnly?: boolean }) {
       title={globalOnly ? t.titleGlobal : t.titleLocal}
       desc={globalOnly ? t.descGlobal : t.descLocal}
       action={
-        <button
-          onClick={handleNewBan}
-          disabled={busy}
-          className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-[12px] font-medium text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/15 disabled:opacity-50"
-        >
+        <MriButton variant="danger-outline" size="sm" onClick={handleNewBan} disabled={busy}>
           {t.banIdentifierButton}
-        </button>
+        </MriButton>
       }
     >
       <Toolbar
@@ -2736,27 +2690,18 @@ export function Protections() {
 
   return (
     <Panel title={t.panelTitle} desc={t.panelDesc}>
-      <div className="relative mb-5 max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t.searchPlaceholder}
-          className="w-full rounded-xl border border-border bg-card/40 py-2.5 pl-9 pr-3 text-[12.5px] outline-none transition-colors placeholder:text-muted-foreground focus:border-foreground/40"
-        />
-      </div>
+      <MriSearchInput
+        value={search}
+        onChange={setSearch}
+        placeholder={t.searchPlaceholder}
+        className="mb-5 max-w-sm"
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {filteredList.map((p: any) => {
           const idx = list.indexOf(p);
           return (
-            <div
-              key={p.name}
-              className={cn(
-                "rounded-xl border border-border p-4 transition-colors hover:border-foreground/30 hover:bg-elevated",
-                !p.enabled && "opacity-55",
-              )}
-            >
+            <MriCard key={p.name} interactive active={p.enabled}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-[13px] font-medium">{p.name}</p>
@@ -2765,27 +2710,11 @@ export function Protections() {
                     {t.groups[p.group] ?? p.group}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleToggle(idx)}
-                  role="switch"
-                  aria-checked={p.enabled}
-                  className={cn(
-                    "flex h-5 w-9 shrink-0 items-center rounded-full border p-[3px] transition-colors",
-                    p.enabled
-                      ? "justify-end border-gold/40 bg-gold"
-                      : "justify-start border-red-500/30 bg-red-500/10",
-                  )}
-                  aria-label={t.toggleAria(p.name)}
-                >
-                  <motion.span
-                    layout
-                    transition={{ type: "spring", stiffness: 500, damping: 34 }}
-                    className={cn(
-                      "h-3.5 w-3.5 rounded-full",
-                      p.enabled ? "bg-primary-foreground" : "bg-red-500/70",
-                    )}
-                  />
-                </button>
+                <MriToggle
+                  checked={p.enabled}
+                  onChange={() => handleToggle(idx)}
+                  ariaLabel={t.toggleAria(p.name)}
+                />
               </div>
               <div className="mt-4 flex items-center justify-between">
                 <PunishmentSelect
@@ -2801,7 +2730,7 @@ export function Protections() {
                   {t.triggersSuffix(p.triggers)}
                 </span>
               </div>
-            </div>
+            </MriCard>
           );
         })}
       </div>
@@ -3031,12 +2960,9 @@ export function Wall() {
       title={t.panelTitle}
       desc={t.panelDesc}
       action={
-        <button
-          onClick={handleAdd}
-          className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-1.5 text-[12px] font-medium text-gold transition-colors hover:border-gold/50 hover:bg-gold/15"
-        >
+        <MriButton variant="primary" size="sm" onClick={handleAdd}>
           {t.newNoteButton}
-        </button>
+        </MriButton>
       }
     >
       <div className="grid gap-4 md:grid-cols-3">
@@ -3046,10 +2972,7 @@ export function Wall() {
           </p>
         )}
         {notes.map((note: any) => (
-          <div
-            key={note._id || note.title}
-            className="rounded-xl border border-border p-5 transition-colors hover:bg-elevated"
-          >
+          <MriCard key={note._id || note.title} className="p-5 hover:bg-elevated">
             <div className="flex items-start justify-between gap-2">
               <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                 {note.title}
@@ -3062,7 +2985,7 @@ export function Wall() {
               </button>
             </div>
             <p className="mt-3 text-[13px] leading-relaxed">{note.content}</p>
-          </div>
+          </MriCard>
         ))}
       </div>
     </Panel>
@@ -3138,51 +3061,47 @@ export function Spawner() {
             <option value="vehicle">{t.optionVehicle}</option>
             <option value="item">{t.optionItem}</option>
           </select>
-          <input
+          <MriInput
             value={targetPassport}
             onChange={(e) => setTargetPassport(e.target.value)}
             placeholder={t.placeholderPassport}
             type="number"
             required
-            className="rounded-xl border border-border bg-card/40 px-3 py-2.5 text-[12.5px] outline-none placeholder:text-muted-foreground focus:border-foreground/40"
+            className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40"
           />
-          <input
+          <MriInput
             value={resource}
             onChange={(e) => setResource(e.target.value)}
             placeholder={type === "vehicle" ? t.placeholderModel : t.placeholderItem}
             required
-            className="rounded-xl border border-border bg-card/40 px-3 py-2.5 text-[12.5px] outline-none placeholder:text-muted-foreground focus:border-foreground/40"
+            className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40"
           />
           {type === "item" ? (
-            <input
+            <MriInput
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               placeholder={t.placeholderQuantity}
               type="number"
               min={1}
-              className="rounded-xl border border-border bg-card/40 px-3 py-2.5 text-[12.5px] outline-none placeholder:text-muted-foreground focus:border-foreground/40"
+              className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40"
             />
           ) : (
-            <input
+            <MriInput
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t.placeholderReasonOptional}
-              className="rounded-xl border border-border bg-card/40 px-3 py-2.5 text-[12.5px] outline-none placeholder:text-muted-foreground focus:border-foreground/40"
+              className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40"
             />
           )}
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-xl border border-gold/30 bg-gold/10 px-3 py-2.5 text-[12.5px] font-medium text-gold transition-colors hover:border-gold/50 hover:bg-gold/15 disabled:opacity-50"
-          >
+          <MriButton variant="primary" type="submit" disabled={busy} className="rounded-xl">
             {t.sendCommand}
-          </button>
+          </MriButton>
           {type === "item" && (
-            <input
+            <MriInput
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t.placeholderReasonOptional}
-              className="rounded-xl border border-border bg-card/40 px-3 py-2.5 text-[12.5px] outline-none placeholder:text-muted-foreground focus:border-foreground/40 sm:col-span-2 lg:col-span-5"
+              className="rounded-xl bg-card/40 px-3 py-2.5 focus:border-foreground/40 sm:col-span-2 lg:col-span-5"
             />
           )}
         </form>
@@ -3378,7 +3297,7 @@ export function Wipe() {
     <div className="space-y-5">
       <Panel title={t.panelTitle} desc={t.panelDesc}>
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="flex items-center gap-4 rounded-xl border border-border p-5 transition-colors hover:bg-elevated">
+          <MriCard className="flex items-center gap-4 p-5 hover:bg-elevated">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[8px] border border-hairline text-foreground/70">
               <Database className="h-4 w-4" />
             </span>
@@ -3389,14 +3308,10 @@ export function Wipe() {
                 {deletedCount !== null && t.cacheCardLastRun(deletedCount)}
               </p>
             </div>
-            <button
-              onClick={handleWipeDetectionsCache}
-              disabled={busy === "cache"}
-              className="shrink-0 rounded-lg border border-border px-3 py-2 text-[12px] transition-colors hover:bg-accent disabled:opacity-50"
-            >
+            <MriButton variant="outline" onClick={handleWipeDetectionsCache} disabled={busy === "cache"}>
               {t.run}
-            </button>
-          </div>
+            </MriButton>
+          </MriCard>
 
           {MAINTENANCE_OPS.map(({ type, title, desc }) => {
             const latest = latestMaintenance(type);
@@ -3409,10 +3324,7 @@ export function Wipe() {
                     .join(", ")
                 : null;
             return (
-              <div
-                key={type}
-                className="flex items-center gap-4 rounded-xl border border-border p-5 transition-colors hover:bg-elevated"
-              >
+              <MriCard key={type} className="flex items-center gap-4 p-5 hover:bg-elevated">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[8px] border border-hairline text-foreground/70">
                   <Database className="h-4 w-4" />
                 </span>
@@ -3430,18 +3342,18 @@ export function Wipe() {
                     {status === "failed" && latest?.failReason && ` — ${latest.failReason}`}
                   </p>
                 </div>
-                <button
+                <MriButton
+                  variant="outline"
                   onClick={() => handleMaintenanceOp(type)}
                   disabled={busy === type || isRunning}
-                  className="shrink-0 rounded-lg border border-border px-3 py-2 text-[12px] transition-colors hover:bg-accent disabled:opacity-50"
                 >
                   {isRunning ? t.running : t.run}
-                </button>
-              </div>
+                </MriButton>
+              </MriCard>
             );
           })}
 
-          <div className="flex items-center gap-4 rounded-xl border border-red-500/20 bg-red-500/[0.03] p-5 transition-colors hover:bg-red-500/[0.06]">
+          <MriCard className="flex items-center gap-4 border-red-500/20 bg-red-500/[0.03] p-5 hover:bg-red-500/[0.06]">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[8px] border border-red-500/30 bg-red-500/10 text-red-400">
               <Trash2 className="h-4 w-4" />
             </span>
@@ -3455,14 +3367,14 @@ export function Wipe() {
                 <p className="mt-1 text-[11.5px] text-muted-foreground/80">{t.pendingNotice}</p>
               )}
             </div>
-            <button
+            <MriButton
+              variant="danger-outline"
               onClick={handleRequestEvidenceWipe}
               disabled={busy === "evidence-request" || !!myPendingRequest}
-              className="shrink-0 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[12px] font-medium text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/15 disabled:opacity-50"
             >
               {myPendingRequest ? t.pending : t.requestWipe}
-            </button>
-          </div>
+            </MriButton>
+          </MriCard>
         </div>
       </Panel>
 
@@ -3470,9 +3382,9 @@ export function Wipe() {
         <Panel title={t.pendingApprovalsTitle} desc={t.pendingApprovalsDesc}>
           <div className="space-y-3">
             {othersPendingRequests.map((r: any) => (
-              <div
+              <MriCard
                 key={r._id}
-                className="flex items-center justify-between gap-4 rounded-xl border border-red-500/20 bg-red-500/[0.03] p-4"
+                className="flex items-center justify-between gap-4 border-red-500/20 bg-red-500/[0.03] p-4"
               >
                 <div>
                   <p className="text-[12.5px] font-medium">
@@ -3482,14 +3394,14 @@ export function Wipe() {
                     {formatDateTime(r.requestedAt, lang)}
                   </p>
                 </div>
-                <button
+                <MriButton
+                  variant="danger-outline"
                   onClick={() => handleApproveEvidenceWipe(r._id)}
                   disabled={busy === r._id}
-                  className="shrink-0 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[12px] font-medium text-red-400 transition-colors hover:border-red-500/50 hover:bg-red-500/15 disabled:opacity-50"
                 >
                   {t.approve}
-                </button>
-              </div>
+                </MriButton>
+              </MriCard>
             ))}
           </div>
         </Panel>
@@ -3565,12 +3477,9 @@ export function Staff() {
       title={t.panelTitle}
       desc={t.panelDesc}
       action={
-        <button
-          onClick={handleAdd}
-          className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-1.5 text-[12px] font-medium text-gold transition-colors hover:border-gold/50 hover:bg-gold/15"
-        >
+        <MriButton variant="primary" size="sm" onClick={handleAdd}>
           {t.addMemberButton}
-        </button>
+        </MriButton>
       }
     >
       <Toolbar placeholder={t.searchPlaceholder} />
@@ -3708,59 +3617,41 @@ export function Notifications() {
           {ALERT_TOGGLES.map((a) => {
             const enabled = alerts[a.key] ?? true;
             return (
-              <div
-                key={a.key}
-                className="flex items-center justify-between gap-4 rounded-xl border border-border p-4"
-              >
+              <MriCard key={a.key} className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-[13px] font-medium">{a.label}</p>
                   <p className="mt-1 text-[12px] text-muted-foreground">{a.desc}</p>
                 </div>
-                <button
-                  onClick={() => handleToggle(a.key)}
+                <MriToggle
+                  checked={enabled}
+                  onChange={() => handleToggle(a.key)}
                   disabled={saving === a.key}
-                  role="switch"
-                  aria-checked={enabled}
-                  className={cn(
-                    "flex h-5 w-9 shrink-0 items-center rounded-full border p-[3px] transition-colors disabled:opacity-50",
-                    enabled
-                      ? "justify-end border-gold/40 bg-gold"
-                      : "justify-start border-border bg-accent",
-                  )}
-                  aria-label={t.toggleAria(a.label)}
-                >
-                  <motion.span
-                    layout
-                    transition={{ type: "spring", stiffness: 500, damping: 34 }}
-                    className={cn(
-                      "h-3.5 w-3.5 rounded-full",
-                      enabled ? "bg-primary-foreground" : "bg-muted-foreground",
-                    )}
-                  />
-                </button>
-              </div>
+                  ariaLabel={t.toggleAria(a.label)}
+                  offTone="neutral"
+                />
+              </MriCard>
             );
           })}
         </div>
       </Panel>
       <Panel title={t.panelIntegrationsTitle} desc={t.panelIntegrationsDesc}>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-border p-4">
+          <MriCard>
             <p className="text-[13px] font-medium">{t.discordWebhook}</p>
             <p className="mt-1 text-[11.5px] text-muted-foreground">
               {hasWebhook ? t.connected : t.notConfigured}
             </p>
-          </div>
-          <div className="rounded-xl border border-border p-4 opacity-60">
+          </MriCard>
+          <MriCard className="opacity-60">
             <p className="text-[13px] font-medium">{t.email}</p>
             <p className="mt-1 text-[11.5px] text-muted-foreground">{t.emailUnavailable}</p>
-          </div>
-          <div className="rounded-xl border border-border p-4">
+          </MriCard>
+          <MriCard>
             <p className="text-[13px] font-medium">{t.apiGoat}</p>
             <p className="mt-1 text-[11.5px] text-muted-foreground">
               {server.licenseKey ? t.apiActive : t.apiNoKey}
             </p>
-          </div>
+          </MriCard>
         </div>
       </Panel>
     </div>

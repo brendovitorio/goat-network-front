@@ -27,6 +27,7 @@ import type { LucideIcon } from "lucide-react";
 import { discordAvatarUrl } from "@/lib/goat-api";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { MriButton } from "@/components/ui/MriButton";
 
 type Item = {
   icon: LucideIcon;
@@ -200,13 +201,15 @@ export function DashboardSidebar({
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/60" onClick={onCloseMobile} />
           <aside className="absolute top-0 left-0 flex h-full w-[260px] flex-col border-r border-hairline bg-sidebar shadow-2xl">
-            <button
+            <MriButton
+              variant="ghost"
+              size="icon"
               onClick={onCloseMobile}
               aria-label={t.closeMenuAria}
-              className="absolute top-3 right-3 z-10 flex h-7 w-7 items-center justify-center rounded-md text-foreground/60 hover:bg-secondary hover:text-foreground"
+              className="absolute top-3 right-3 z-10 h-7 w-7 rounded-md text-foreground/60"
             >
               <X className="h-4 w-4" />
-            </button>
+            </MriButton>
             <SidebarContent
               collapsed={false}
               online={online}
@@ -349,15 +352,16 @@ function SidebarContent({
             >
               {t.profileLabel}
             </Link>
-            <button
+            <MriButton
+              variant="ghost"
               onClick={() => {
                 localStorage.clear();
                 window.location.href = "/auth";
               }}
-              className="w-full rounded px-2 py-1.5 text-left text-[12px] text-red-400 hover:bg-red-500/10 hover:text-red-300"
+              className="w-full justify-start rounded px-2 py-1.5 text-[12px] text-red-400 hover:bg-red-500/10 hover:text-red-300"
             >
               {t.logoutLabel}
-            </button>
+            </MriButton>
           </div>
         </button>
       </div>

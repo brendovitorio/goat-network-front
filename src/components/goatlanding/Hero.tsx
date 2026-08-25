@@ -5,6 +5,7 @@ import { usePrefersReducedMotion } from "@/animations/useReducedMotion";
 import { useScrollVelocity } from "@/animations/useScrollVelocity";
 import { Magnetic } from "@/animations/Magnetic";
 import { GOAT_ICON_PATH, GOAT_ICON_VIEWBOX } from "./goat-icon";
+import { MriButton } from "@/components/ui/MriButton";
 
 const brands = [
   "COMPLEXO",
@@ -294,19 +295,21 @@ export function Hero() {
               className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
             >
               <Magnetic max={5}>
-                <a
-                  href="/products"
-                  className="rounded-lg bg-primary px-6 py-3 text-[13.5px] font-semibold text-primary-foreground shadow-[0_0_0_1px_oklch(0.94_0.012_240/0.4)] transition-transform hover:scale-[1.02]"
+                <MriButton
+                  asChild
+                  variant="solid"
+                  className="rounded-lg px-6 py-3 text-[13.5px] shadow-[0_0_0_1px_oklch(0.94_0.012_240/0.4)] transition-transform hover:scale-[1.02] hover:brightness-100"
                 >
-                  {t.ctaProducts}
-                </a>
+                  <a href="/products">{t.ctaProducts}</a>
+                </MriButton>
               </Magnetic>
-              <a
-                href="/empresa"
-                className="rounded-lg border border-hairline px-6 py-3 text-[13.5px] font-medium text-foreground/85 transition-colors hover:border-gold/40 hover:text-foreground"
+              <MriButton
+                asChild
+                variant="outline"
+                className="rounded-lg border-hairline px-6 py-3 text-[13.5px] text-foreground/85 hover:bg-transparent hover:border-gold/40 hover:text-foreground"
               >
-                {t.ctaAbout}
-              </a>
+                <a href="/empresa">{t.ctaAbout}</a>
+              </MriButton>
             </div>
           </div>
         </div>

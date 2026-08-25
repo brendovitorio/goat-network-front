@@ -7,6 +7,12 @@ import { api, ServerItem } from "@/lib/goat-api";
 import { DashboardSidebar } from "@/goatdash/DashboardSidebar";
 import { DialogProvider } from "./Dialog";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { MriButton } from "@/components/ui/MriButton";
+import { MriPanel } from "@/components/ui/MriPanel";
+import { MriStat } from "@/components/ui/MriStat";
+import { MriBadge } from "@/components/ui/MriBadge";
+import { MriTable } from "@/components/ui/MriTable";
+import type { MriBadgeTone } from "@/components/ui/mri-badge-variants";
 
 type Copy = {
   loadingDashboard: string;
@@ -130,20 +136,24 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-xl sm:px-6">
             <div className="flex min-w-0 items-center gap-3 text-[12px] font-medium text-muted-foreground">
-              <button
+              <MriButton
+                variant="ghost"
+                size="icon"
                 onClick={() => setMobileNavOpen(true)}
                 aria-label={t.openMenuAria}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-accent/50 hover:text-foreground lg:hidden"
+                className="rounded-md hover:bg-accent/50 lg:hidden"
               >
                 <Menu className="h-4 w-4" />
-              </button>
-              <button
+              </MriButton>
+              <MriButton
+                variant="ghost"
+                size="icon"
                 onClick={toggleSidebar}
                 aria-label={sidebarCollapsed ? t.expandMenuAria : t.collapseMenuAria}
-                className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-accent/50 hover:text-foreground lg:flex"
+                className="hidden rounded-md hover:bg-accent/50 lg:flex"
               >
                 <PanelLeft className="h-4 w-4" />
-              </button>
+              </MriButton>
               <span className="hidden font-mono text-[10.5px] tracking-[0.08em] text-foreground/40 uppercase sm:inline">
                 goat.anticheat
               </span>
@@ -193,54 +203,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Panel({
-  title,
-  desc,
-  action,
-  children,
-  className,
-}: {
-  title?: string;
-  desc?: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <section className={cn("rounded-xl border border-border bg-card transition-colors", className)}>
-      {(title || action) && (
-        <header className="flex items-center justify-between gap-4 px-5 py-4">
-          <div className="min-w-0">
-            {title && <h2 className="text-[13.5px] font-semibold tracking-tight">{title}</h2>}
-            {desc && (
-              <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{desc}</p>
-            )}
-          </div>
-          {action}
-        </header>
-      )}
-      <div className={cn(title ? "border-t border-border" : "", "p-5")}>{children}</div>
-    </section>
-  );
-}
+// Panel/Stat/Tag/Table agora vivem em src/components/ui/ (kit "Mri*"
+// compartilhado com o painel in-game do goat_ac). Mantidos re-exportados
+// aqui com os nomes antigos pra não quebrar nenhum import existente em
+// sections.tsx/SettingsTabs.tsx/etc.
+export const Panel = MriPanel;
+export const Stat = MriStat;
 
-export function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground/20">
-      <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
-        <span className="h-[3px] w-[3px] rounded-[1px] bg-gold/70" />
-        {label}
-      </p>
-      <p className="mt-3 text-[26px] font-semibold leading-none tracking-[-0.03em] tabular-nums">
-        {value}
-      </p>
-      {hint && <p className="mt-2 text-[11.5px] text-muted-foreground">{hint}</p>}
-    </div>
-  );
-}
-
-export type TagTone = "neutral" | "gold" | "warning" | "critical" | "success";
-
+export type TagTone = NonNullable<MriBadgeTone>;
 export const TAG_TONE_CLASS: Record<TagTone, string> = {
   neutral: "border border-border text-muted-foreground",
   gold: "bg-gold text-primary-foreground",
@@ -258,53 +228,11 @@ export function Tag({
   solid?: boolean;
   tone?: TagTone;
 }) {
-  const resolvedTone: TagTone = tone ?? (solid ? "gold" : "neutral");
   return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-[10.5px] font-medium",
-        TAG_TONE_CLASS[resolvedTone],
-      )}
-    >
+    <MriBadge tone={tone} solid={solid}>
       {children}
-    </span>
+    </MriBadge>
   );
 }
 
-export function Table({
-  head,
-  rows,
-  cols,
-}: {
-  head: string[];
-  rows: React.ReactNode[][];
-  cols: string;
-}) {
-  return (
-    <div className="overflow-x-auto">
-      <div className="min-w-[720px]">
-        <div
-          className="grid gap-3 border-b border-border pb-3 font-mono text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70"
-          style={{ gridTemplateColumns: cols }}
-        >
-          {head.map((h) => (
-            <span key={h}>{h}</span>
-          ))}
-        </div>
-        {rows.map((r, i) => (
-          <div
-            key={i}
-            className="grid items-center gap-3 border-b border-border/60 py-3 text-[12.5px] transition-colors hover:bg-accent/30"
-            style={{ gridTemplateColumns: cols }}
-          >
-            {r.map((c, j) => (
-              <span key={j} className="truncate">
-                {c}
-              </span>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+export const Table = MriTable;

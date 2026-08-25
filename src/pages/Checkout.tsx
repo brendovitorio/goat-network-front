@@ -14,6 +14,9 @@ import {
 import { Nav } from "@/components/goatlanding/Nav";
 import { api, PlanItem } from "@/lib/goat-api";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { MriCard } from "@/components/ui/MriCard";
+import { MriButton } from "@/components/ui/MriButton";
+import { MriInput } from "@/components/ui/MriInput";
 
 const formatBRL = (amount: number) => `R$ ${amount.toFixed(2).replace(".", ",")}`;
 
@@ -413,7 +416,7 @@ export default function CheckoutPage() {
               >
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
                   <div className="flex-1 space-y-6 text-left">
-                    <div className="rounded-2xl border border-border/50 bg-card/40 p-8">
+                    <MriCard className="rounded-2xl border-border/50 bg-card/40 p-8">
                       <h2 className="text-xl font-semibold text-foreground">{currentPlan.name}</h2>
                       <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                         {currentPlan.description}
@@ -431,11 +434,11 @@ export default function CheckoutPage() {
                           ))}
                         </ul>
                       </div>
-                    </div>
+                    </MriCard>
                   </div>
 
                   <div className="w-full lg:w-[400px] shrink-0 text-left">
-                    <div className="rounded-2xl border border-border/50 bg-card/40 p-8 sticky top-24">
+                    <MriCard className="sticky top-24 rounded-2xl border-border/50 bg-card/40 p-8">
                       <h3 className="text-base font-semibold text-foreground">{t.orderSummary}</h3>
                       <div className="mt-6 space-y-4 border-y border-border/50 py-6">
                         <div className="flex items-center justify-between text-[13px]">
@@ -489,17 +492,18 @@ export default function CheckoutPage() {
                           .
                         </label>
                       </div>
-                      <button
+                      <MriButton
+                        variant="ghost"
                         type="submit"
                         disabled={loading}
-                        className="w-full flex items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-3.5 text-[14px] font-semibold text-background transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+                        className="w-full rounded-xl bg-foreground py-3.5 text-[14px] text-background transition-transform hover:scale-[1.02] hover:bg-foreground active:scale-[0.98]"
                       >
                         {loading ? t.submitLoading : t.submitCta}
-                      </button>
+                      </MriButton>
                       <p className="mt-3 text-center text-[10.5px] text-muted-foreground">
                         {t.stripeNote}
                       </p>
-                    </div>
+                    </MriCard>
                   </div>
                 </div>
               </motion.form>
@@ -527,23 +531,26 @@ export default function CheckoutPage() {
                 key="payment"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mt-16 mx-auto max-w-md text-center rounded-2xl border border-border bg-card/40 p-10"
+                className="mt-16 mx-auto max-w-md"
               >
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-background">
-                  <Check className="h-8 w-8 stroke-[3]" />
-                </div>
-                <h2 className="mt-6 text-2xl font-semibold text-foreground">
-                  {t.paymentConfirmedTitle}
-                </h2>
-                <p className="mt-3 text-sm text-muted-foreground">
-                  {t.paymentConfirmedSubtitle}
-                </p>
-                <button
-                  onClick={handleStartRegistration}
-                  className="mt-8 w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
-                >
-                  {t.setupServerCta} <ArrowRight className="h-4 w-4" />
-                </button>
+                <MriCard className="rounded-2xl bg-card/40 p-10 text-center">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-foreground text-background">
+                    <Check className="h-8 w-8 stroke-[3]" />
+                  </div>
+                  <h2 className="mt-6 text-2xl font-semibold text-foreground">
+                    {t.paymentConfirmedTitle}
+                  </h2>
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    {t.paymentConfirmedSubtitle}
+                  </p>
+                  <MriButton
+                    variant="solid"
+                    onClick={handleStartRegistration}
+                    className="mt-8 w-full rounded-xl py-3 text-sm hover:opacity-90 hover:brightness-100"
+                  >
+                    {t.setupServerCta} <ArrowRight className="h-4 w-4" />
+                  </MriButton>
+                </MriCard>
               </motion.div>
             )}
 
@@ -556,7 +563,7 @@ export default function CheckoutPage() {
                 onSubmit={handleNextToStep2}
                 className="mt-16 mx-auto max-w-lg"
               >
-                <div className="rounded-2xl border border-border bg-card/40 p-8 text-left">
+                <MriCard className="rounded-2xl p-8 text-left">
                   <div className="mb-8 flex items-center justify-between">
                     <div>
                       <h2 className="text-xl font-semibold text-foreground">{t.reg1Title}</h2>
@@ -570,13 +577,13 @@ export default function CheckoutPage() {
                       <label className="block text-[13px] font-medium text-foreground mb-2">
                         {t.serverNameLabel}
                       </label>
-                      <input
+                      <MriInput
                         type="text"
                         required
                         value={serverName}
                         onChange={(e) => setServerName(e.target.value)}
                         placeholder={t.serverNamePlaceholder}
-                        className="w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-sm outline-none transition-colors focus:border-foreground/40"
+                        className="rounded-xl bg-background/50 px-4 py-3 text-sm focus:border-foreground/40"
                       />
                     </div>
 
@@ -608,14 +615,15 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="mt-10 flex gap-3">
-                    <button
+                    <MriButton
+                      variant="ghost"
                       type="submit"
-                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-3 text-sm font-semibold text-background hover:opacity-90"
+                      className="flex-1 rounded-xl bg-foreground py-3 text-sm text-background hover:bg-foreground hover:opacity-90"
                     >
                       {t.nextStepCta} <ArrowRight className="h-4 w-4" />
-                    </button>
+                    </MriButton>
                   </div>
-                </div>
+                </MriCard>
               </motion.form>
             )}
 
@@ -628,7 +636,7 @@ export default function CheckoutPage() {
                 onSubmit={handleFinalizeRegistration}
                 className="mt-16 mx-auto max-w-lg"
               >
-                <div className="rounded-2xl border border-border bg-card/40 p-8 text-left">
+                <MriCard className="rounded-2xl p-8 text-left">
                   <div className="mb-8 flex items-center justify-between">
                     <div>
                       <h2 className="text-xl font-semibold text-foreground">{t.reg2Title}</h2>
@@ -642,12 +650,12 @@ export default function CheckoutPage() {
                       <label className="block text-[13px] font-medium text-foreground mb-2">
                         {t.cfxCodeLabel}
                       </label>
-                      <input
+                      <MriInput
                         type="text"
                         value={cfxCode}
                         onChange={(e) => setCfxCode(e.target.value)}
                         placeholder={t.cfxCodePlaceholder}
-                        className="w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-sm outline-none transition-colors focus:border-foreground/40"
+                        className="rounded-xl bg-background/50 px-4 py-3 text-sm focus:border-foreground/40"
                       />
                       <p className="mt-1.5 text-[11px] text-muted-foreground">
                         {t.cfxCodeHint}
@@ -658,33 +666,35 @@ export default function CheckoutPage() {
                       <label className="block text-[13px] font-medium text-foreground mb-2">
                         {t.serverIpLabel}
                       </label>
-                      <input
+                      <MriInput
                         type="text"
                         value={ip}
                         onChange={(e) => setIp(e.target.value)}
                         placeholder={t.serverIpPlaceholder}
-                        className="w-full rounded-xl border border-border bg-background/50 px-4 py-3 text-sm outline-none transition-colors focus:border-foreground/40"
+                        className="rounded-xl bg-background/50 px-4 py-3 text-sm focus:border-foreground/40"
                       />
                     </div>
                   </div>
 
                   <div className="mt-10 flex gap-3">
-                    <button
+                    <MriButton
+                      variant="outline"
                       type="button"
                       onClick={() => setStep("registration-1")}
-                      className="flex items-center justify-center rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold hover:bg-elevated"
+                      className="rounded-xl bg-background px-4 py-3 hover:bg-elevated hover:text-foreground"
                     >
                       <ArrowLeft className="h-4 w-4" />
-                    </button>
-                    <button
+                    </MriButton>
+                    <MriButton
+                      variant="solid"
                       type="submit"
                       disabled={loading}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                      className="flex-1 rounded-xl py-3 text-sm hover:opacity-90 hover:brightness-100"
                     >
                       {loading ? t.finalizeLoading : t.finalizeCta}
-                    </button>
+                    </MriButton>
                   </div>
-                </div>
+                </MriCard>
               </motion.form>
             )}
 

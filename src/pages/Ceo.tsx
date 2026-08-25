@@ -28,6 +28,9 @@ import {
 } from "@/lib/goat-api";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { formatDate } from "@/lib/format";
+import { MriCard } from "@/components/ui/MriCard";
+import { MriButton } from "@/components/ui/MriButton";
+import { MriInput } from "@/components/ui/MriInput";
 
 type Copy = {
   tabTitle: string;
@@ -1067,7 +1070,7 @@ export default function CeoPage() {
             <p className="mt-1 text-[11.5px] text-muted-foreground">{t.newProduct.description}</p>
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label={t.newProduct.nameLabel}>
-                <input
+                <MriInput
                   value={productForm.name}
                   onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
                   className={inputClass}
@@ -1086,7 +1089,7 @@ export default function CeoPage() {
               </Field>
               <div className="sm:col-span-2">
                 <Field label={t.newProduct.descriptionLabel}>
-                  <input
+                  <MriInput
                     value={productForm.description}
                     onChange={(e) =>
                       setProductForm({ ...productForm, description: e.target.value })
@@ -1121,13 +1124,14 @@ export default function CeoPage() {
                 </Field>
               </div>
             </div>
-            <button
+            <MriButton
+              variant="outline"
               type="submit"
               disabled={creatingProduct}
-              className="mt-6 flex items-center gap-2 rounded-xl border border-border bg-background px-5 py-3 text-[13px] font-semibold text-foreground transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+              className="mt-6 rounded-xl bg-background px-5 py-3 text-[13px] transition-transform hover:scale-[1.02] hover:bg-background hover:text-foreground active:scale-[0.98]"
             >
               {creatingProduct ? t.newProduct.submitBusy : t.newProduct.submitIdle}
-            </button>
+            </MriButton>
           </motion.form>
 
           {/* Criar novo plano */}
@@ -1157,7 +1161,7 @@ export default function CeoPage() {
                 </select>
               </Field>
               <Field label={t.newPlan.nameLabel}>
-                <input
+                <MriInput
                   value={planForm.name}
                   onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
                   className={inputClass}
@@ -1165,7 +1169,7 @@ export default function CeoPage() {
                 />
               </Field>
               <Field label={t.newPlan.amountLabel}>
-                <input
+                <MriInput
                   value={planForm.amount}
                   onChange={(e) => setPlanForm({ ...planForm, amount: e.target.value })}
                   className={inputClass}
@@ -1174,7 +1178,7 @@ export default function CeoPage() {
                 />
               </Field>
               <Field label={t.newPlan.descriptionLabel}>
-                <input
+                <MriInput
                   value={planForm.description}
                   onChange={(e) => setPlanForm({ ...planForm, description: e.target.value })}
                   className={inputClass}
@@ -1182,7 +1186,7 @@ export default function CeoPage() {
                 />
               </Field>
               <Field label={t.newPlan.billingNoteLabel}>
-                <input
+                <MriInput
                   value={planForm.billingNote}
                   onChange={(e) => setPlanForm({ ...planForm, billingNote: e.target.value })}
                   className={inputClass}
@@ -1214,7 +1218,7 @@ export default function CeoPage() {
                     </select>
                   </Field>
                   <Field label={t.newPlan.intervalCountLabel}>
-                    <input
+                    <MriInput
                       value={planForm.intervalCount}
                       onChange={(e) => setPlanForm({ ...planForm, intervalCount: e.target.value })}
                       className={inputClass}
@@ -1224,7 +1228,7 @@ export default function CeoPage() {
                 </div>
               )}
               <Field label={t.newPlan.badgeLabel}>
-                <input
+                <MriInput
                   value={planForm.badge}
                   onChange={(e) => setPlanForm({ ...planForm, badge: e.target.value })}
                   className={inputClass}
@@ -1232,7 +1236,7 @@ export default function CeoPage() {
                 />
               </Field>
               <Field label={t.newPlan.sortOrderLabel}>
-                <input
+                <MriInput
                   value={planForm.sortOrder}
                   onChange={(e) => setPlanForm({ ...planForm, sortOrder: e.target.value })}
                   className={inputClass}
@@ -1266,13 +1270,14 @@ export default function CeoPage() {
                 </Field>
               </div>
             </div>
-            <button
+            <MriButton
+              variant="ghost"
               type="submit"
               disabled={creatingPlan || products.length === 0}
-              className="mt-6 flex items-center gap-2 rounded-xl bg-foreground px-5 py-3 text-[13px] font-semibold text-background transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+              className="mt-6 rounded-xl bg-foreground px-5 py-3 text-[13px] text-background transition-transform hover:scale-[1.02] hover:bg-foreground active:scale-[0.98]"
             >
               {creatingPlan ? t.newPlan.submitBusy : t.newPlan.submitIdle}
-            </button>
+            </MriButton>
           </motion.form>
 
           {/* Liberar produto de graça */}
@@ -1288,7 +1293,7 @@ export default function CeoPage() {
             <p className="mt-1 text-[11.5px] text-muted-foreground">{t.grants.description}</p>
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label={t.grants.discordIdLabel}>
-                <input
+                <MriInput
                   value={grantForm.discordId}
                   onChange={(e) => setGrantForm({ ...grantForm, discordId: e.target.value })}
                   className={inputClass}
@@ -1313,7 +1318,7 @@ export default function CeoPage() {
               </Field>
               <div className="sm:col-span-2">
                 <Field label={t.grants.serverNameLabel}>
-                  <input
+                  <MriInput
                     value={grantForm.serverName}
                     onChange={(e) => setGrantForm({ ...grantForm, serverName: e.target.value })}
                     className={inputClass}
@@ -1322,31 +1327,33 @@ export default function CeoPage() {
                 </Field>
               </div>
             </div>
-            <button
+            <MriButton
+              variant="outline"
               type="submit"
               disabled={grantingFree || plans.length === 0}
-              className="mt-6 flex items-center gap-2 rounded-xl border border-border bg-background px-5 py-3 text-[13px] font-semibold text-foreground transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+              className="mt-6 rounded-xl bg-background px-5 py-3 text-[13px] transition-transform hover:scale-[1.02] hover:bg-background hover:text-foreground active:scale-[0.98]"
             >
               {grantingFree ? t.grants.submitBusy : t.grants.submitIdle}
-            </button>
+            </MriButton>
             {grantResult?.finalizeUrl && (
-              <div className="mt-4 rounded-xl border border-border/50 bg-background/50 p-4">
+              <MriCard className="mt-4 border-border/50 bg-background/50">
                 <p className="text-[12px] text-muted-foreground">{t.grants.resultHint}</p>
                 <div className="mt-2 flex items-center gap-2">
-                  <input
+                  <MriInput
                     readOnly
                     value={grantResult.finalizeUrl}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-[11.5px] text-foreground"
+                    className="rounded-lg bg-background px-3 py-2 text-[11.5px] text-foreground"
                   />
-                  <button
+                  <MriButton
+                    variant="outline"
                     type="button"
                     onClick={() => navigator.clipboard.writeText(grantResult.finalizeUrl!)}
-                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-[11.5px] font-medium hover:bg-elevated"
+                    className="shrink-0 rounded-lg bg-background px-3 py-2 text-[11.5px] hover:bg-elevated hover:text-foreground"
                   >
                     <Copy className="h-3.5 w-3.5" /> {t.grants.copyButton}
-                  </button>
+                  </MriButton>
                 </div>
-              </div>
+              </MriCard>
             )}
           </motion.form>
 
@@ -1363,7 +1370,7 @@ export default function CeoPage() {
             <p className="mt-1 text-[11.5px] text-muted-foreground">{t.coupons.description}</p>
             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label={t.coupons.codeLabel}>
-                <input
+                <MriInput
                   value={couponForm.code}
                   onChange={(e) =>
                     setCouponForm({ ...couponForm, code: e.target.value.toUpperCase() })
@@ -1401,7 +1408,7 @@ export default function CeoPage() {
               </Field>
               {couponForm.discountType === "percent" ? (
                 <Field label={t.coupons.percentLabel}>
-                  <input
+                  <MriInput
                     value={couponForm.percentOff}
                     onChange={(e) => setCouponForm({ ...couponForm, percentOff: e.target.value })}
                     className={inputClass}
@@ -1411,7 +1418,7 @@ export default function CeoPage() {
                 </Field>
               ) : (
                 <Field label={t.coupons.amountLabel}>
-                  <input
+                  <MriInput
                     value={couponForm.amountOff}
                     onChange={(e) => setCouponForm({ ...couponForm, amountOff: e.target.value })}
                     className={inputClass}
@@ -1435,7 +1442,7 @@ export default function CeoPage() {
               </Field>
               {couponForm.duration === "repeating" && (
                 <Field label={t.coupons.durationMonthsLabel}>
-                  <input
+                  <MriInput
                     value={couponForm.durationInMonths}
                     onChange={(e) =>
                       setCouponForm({ ...couponForm, durationInMonths: e.target.value })
@@ -1446,7 +1453,7 @@ export default function CeoPage() {
                 </Field>
               )}
               <Field label={t.coupons.maxRedemptionsLabel}>
-                <input
+                <MriInput
                   value={couponForm.maxRedemptions}
                   onChange={(e) => setCouponForm({ ...couponForm, maxRedemptions: e.target.value })}
                   className={inputClass}
@@ -1455,7 +1462,7 @@ export default function CeoPage() {
                 />
               </Field>
               <Field label={t.coupons.expiresAtLabel}>
-                <input
+                <MriInput
                   type="date"
                   value={couponForm.expiresAt}
                   onChange={(e) => setCouponForm({ ...couponForm, expiresAt: e.target.value })}
@@ -1463,23 +1470,24 @@ export default function CeoPage() {
                 />
               </Field>
             </div>
-            <button
+            <MriButton
+              variant="ghost"
               type="submit"
               disabled={creatingCoupon}
-              className="mt-6 flex items-center gap-2 rounded-xl bg-foreground px-5 py-3 text-[13px] font-semibold text-background transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+              className="mt-6 rounded-xl bg-foreground px-5 py-3 text-[13px] text-background transition-transform hover:scale-[1.02] hover:bg-foreground active:scale-[0.98]"
             >
               {creatingCoupon ? t.coupons.submitBusy : t.coupons.submitIdle}
-            </button>
+            </MriButton>
           </motion.form>
 
           {coupons.length > 0 && (
-            <div className="mt-6 rounded-2xl border border-border/50 bg-card/40 p-8">
+            <MriCard className="mt-6 border-border/50 bg-card/40 p-8">
               <h3 className="text-[14px] font-semibold text-foreground">{t.coupons.listHeading}</h3>
               <div className="mt-4 space-y-2">
                 {coupons.map((c) => (
-                  <div
+                  <MriCard
                     key={c.code}
-                    className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${c.active ? "border-border/40 bg-background/40" : "border-border/20 bg-background/20 opacity-60"}`}
+                    className={`flex flex-wrap items-center justify-between gap-3 px-4 py-3 ${c.active ? "border-border/40 bg-background/40" : "border-border/20 bg-background/20 opacity-60"}`}
                   >
                     <div>
                       <div className="flex items-center gap-2">
@@ -1512,18 +1520,19 @@ export default function CeoPage() {
                       </p>
                     </div>
                     {c.active && (
-                      <button
+                      <MriButton
+                        variant="danger-outline"
                         onClick={() => handleDeactivateCoupon(c)}
                         disabled={busyCouponCode === c.code}
-                        className="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2 text-[12px] font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50"
+                        className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
                       >
                         <Power className="h-3.5 w-3.5" /> {t.coupons.deactivate}
-                      </button>
+                      </MriButton>
                     )}
-                  </div>
+                  </MriCard>
                 ))}
               </div>
-            </div>
+            </MriCard>
           )}
 
           {/* Lista de produtos + planos */}
@@ -1563,14 +1572,16 @@ export default function CeoPage() {
                       </span>
                     )}
                   </div>
-                  <button
+                  <MriButton
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleToggleProductActive(product)}
                     disabled={busyCode === product.slug}
-                    className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-[11.5px] font-medium hover:bg-elevated disabled:opacity-50"
+                    className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
                   >
                     <Power className="h-3.5 w-3.5" />{" "}
                     {product.active ? t.catalog.deactivateProduct : t.catalog.reactivateProduct}
-                  </button>
+                  </MriButton>
                 </div>
 
                 <div className="mt-3 space-y-3">
@@ -1580,9 +1591,9 @@ export default function CeoPage() {
                   {plans
                     .filter((pl) => pl.productSlug === product.slug)
                     .map((plan) => (
-                      <div
+                      <MriCard
                         key={plan.code}
-                        className={`rounded-2xl border p-6 ${plan.active ? "border-border/50 bg-card/40" : "border-border/30 bg-card/10 opacity-60"}`}
+                        className={`p-6 ${plan.active ? "border-border/50 bg-card/40" : "border-border/30 bg-card/10 opacity-60"}`}
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
@@ -1627,7 +1638,7 @@ export default function CeoPage() {
                         </div>
 
                         <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border/40 pt-5">
-                          <input
+                          <MriInput
                             value={priceEdits[plan.code] || ""}
                             onChange={(e) =>
                               setPriceEdits((prev) => ({ ...prev, [plan.code]: e.target.value }))
@@ -1636,35 +1647,39 @@ export default function CeoPage() {
                             inputMode="decimal"
                             className="w-40 rounded-xl border border-border bg-background/50 px-4 py-3 text-sm outline-none transition-colors focus:border-foreground/40"
                           />
-                          <button
+                          <MriButton
+                            variant="outline"
                             onClick={() => handleUpdatePrice(plan)}
                             disabled={busyCode === plan.code}
-                            className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-[12px] font-medium hover:bg-elevated disabled:opacity-50"
+                            className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
                           >
                             <Save className="h-3.5 w-3.5" /> {t.catalog.updatePrice}
-                          </button>
-                          <button
+                          </MriButton>
+                          <MriButton
+                            variant="outline"
                             onClick={() => handleToggleActive(plan)}
                             disabled={busyCode === plan.code}
-                            className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-[12px] font-medium hover:bg-elevated disabled:opacity-50"
+                            className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
                           >
                             <Power className="h-3.5 w-3.5" />{" "}
                             {plan.active ? t.catalog.deactivate : t.catalog.reactivate}
-                          </button>
-                          <button
+                          </MriButton>
+                          <MriButton
+                            variant="outline"
                             onClick={() => handleToggleEditDetails(plan)}
-                            className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-[12px] font-medium hover:bg-elevated"
+                            className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
                           >
                             <Pencil className="h-3.5 w-3.5" />{" "}
                             {editingPlanCode === plan.code ? t.catalog.closeEdit : t.catalog.editDetails}
-                          </button>
-                          <button
+                          </MriButton>
+                          <MriButton
+                            variant="danger-outline"
                             onClick={() => handleArchive(plan)}
                             disabled={busyCode === plan.code}
-                            className="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2 text-[12px] font-medium text-red-400 hover:bg-red-500/10 disabled:opacity-50"
+                            className="bg-red-500/5 hover:bg-red-500/10"
                           >
                             <Trash2 className="h-3.5 w-3.5" /> {t.catalog.archive}
-                          </button>
+                          </MriButton>
                         </div>
 
                         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/40 pt-3">
@@ -1684,10 +1699,11 @@ export default function CeoPage() {
                             }
                             className="max-w-full rounded-xl border border-dashed border-border bg-background/50 px-3 py-2 text-[11.5px] text-muted-foreground outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-[12px] file:font-medium file:text-foreground"
                           />
-                          <button
+                          <MriButton
+                            variant="outline"
                             onClick={() => handleUpdateFile(plan)}
                             disabled={uploadingFileCode === plan.code || !planFileEdits[plan.code]}
-                            className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-[12px] font-medium hover:bg-elevated disabled:opacity-50"
+                            className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
                           >
                             <Upload className="h-3.5 w-3.5" />{" "}
                             {uploadingFileCode === plan.code
@@ -1695,14 +1711,14 @@ export default function CeoPage() {
                               : plan.hasDownload
                                 ? t.catalog.replaceFile
                                 : t.catalog.uploadFile}
-                          </button>
+                          </MriButton>
                         </div>
 
                         {editingPlanCode === plan.code && planDetailsEdits[plan.code] && (
                           <div className="mt-3 border-t border-border/40 pt-4">
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                               <Field label={t.catalog.editNameLabel}>
-                                <input
+                                <MriInput
                                   value={planDetailsEdits[plan.code].name}
                                   onChange={(e) =>
                                     setPlanDetailsEdits((prev) => ({
@@ -1714,7 +1730,7 @@ export default function CeoPage() {
                                 />
                               </Field>
                               <Field label={t.catalog.editBillingNoteLabel}>
-                                <input
+                                <MriInput
                                   value={planDetailsEdits[plan.code].billingNote}
                                   onChange={(e) =>
                                     setPlanDetailsEdits((prev) => ({
@@ -1730,7 +1746,7 @@ export default function CeoPage() {
                               </Field>
                               <div className="sm:col-span-2">
                                 <Field label={t.catalog.editDescriptionLabel}>
-                                  <input
+                                  <MriInput
                                     value={planDetailsEdits[plan.code].description}
                                     onChange={(e) =>
                                       setPlanDetailsEdits((prev) => ({
@@ -1746,7 +1762,7 @@ export default function CeoPage() {
                                 </Field>
                               </div>
                               <Field label={t.catalog.editBadgeLabel}>
-                                <input
+                                <MriInput
                                   value={planDetailsEdits[plan.code].badge}
                                   onChange={(e) =>
                                     setPlanDetailsEdits((prev) => ({
@@ -1759,7 +1775,7 @@ export default function CeoPage() {
                                 />
                               </Field>
                               <Field label={t.catalog.editSortOrderLabel}>
-                                <input
+                                <MriInput
                                   value={planDetailsEdits[plan.code].sortOrder}
                                   onChange={(e) =>
                                     setPlanDetailsEdits((prev) => ({
@@ -1792,17 +1808,18 @@ export default function CeoPage() {
                                 </Field>
                               </div>
                             </div>
-                            <button
+                            <MriButton
+                              variant="ghost"
                               onClick={() => handleSaveDetails(plan)}
                               disabled={savingDetailsCode === plan.code}
-                              className="mt-4 flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2.5 text-[12px] font-semibold text-background hover:opacity-90 disabled:opacity-50"
+                              className="mt-4 rounded-lg bg-foreground px-4 py-2.5 text-[12px] text-background hover:bg-foreground hover:opacity-90"
                             >
                               <Save className="h-3.5 w-3.5" />{" "}
                               {savingDetailsCode === plan.code ? t.catalog.saving : t.catalog.saveChanges}
-                            </button>
+                            </MriButton>
                           </div>
                         )}
-                      </div>
+                      </MriCard>
                     ))}
                 </div>
               </div>

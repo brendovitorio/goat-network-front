@@ -6,6 +6,7 @@ import { gsap, ScrollTrigger } from "@/animations/gsap";
 import { usePrefersReducedMotion } from "@/animations/useReducedMotion";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/goat2.png";
+import { MriCard } from "@/components/ui/MriCard";
 
 const ICONS = [ShieldCheck, Zap, KeyRound, MessagesSquare];
 
@@ -278,11 +279,11 @@ export function Features() {
         >
           {pillars.map((p, i) => (
             <FadeUp key={p.title} delay={i * 0.05}>
-              <div className="h-full rounded-xl border border-hairline bg-surface-2/40 p-6">
+              <MriCard className="h-full border-hairline bg-surface-2/40 p-6">
                 <p.icon className="h-4 w-4 text-gold" strokeWidth={1.75} />
                 <h3 className="mt-4 text-[14.5px] font-semibold tracking-tight">{p.title}</h3>
                 <p className="mt-2 text-[13px] leading-[1.6] text-muted-foreground">{p.body}</p>
-              </div>
+              </MriCard>
             </FadeUp>
           ))}
         </FadeStagger>

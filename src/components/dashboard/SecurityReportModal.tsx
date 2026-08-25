@@ -5,6 +5,7 @@ import logo from "@/assets/goat2.png";
 import { Tag, type TagTone } from "./shell";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { formatDateTime } from "@/lib/format";
+import { MriButton } from "@/components/ui/MriButton";
 
 type Copy = {
   reportTitle: string;
@@ -181,20 +182,13 @@ export function SecurityReportModal({
                 </div>
               </div>
               <div className="goat-report-no-print flex items-center gap-2">
-                <button
-                  onClick={() => window.print()}
-                  className="flex items-center gap-1.5 rounded-lg border border-gold/30 bg-gold/10 px-3 py-1.5 text-[12px] font-medium text-gold transition-colors hover:border-gold/50 hover:bg-gold/15"
-                >
+                <MriButton variant="primary" size="sm" onClick={() => window.print()}>
                   <Printer className="h-3.5 w-3.5" />
                   {t.exportPdf}
-                </button>
-                <button
-                  onClick={onClose}
-                  aria-label={t.closeAria}
-                  className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                >
+                </MriButton>
+                <MriButton variant="ghost" size="icon" onClick={onClose} aria-label={t.closeAria}>
                   <X className="h-4 w-4" />
-                </button>
+                </MriButton>
               </div>
             </div>
 
@@ -219,27 +213,17 @@ export function SecurityReportModal({
               </motion.div>
 
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <KpiCard
-                  icon={Users}
-                  label="Jogadores Online"
-                  value={String(data.players)}
-                  index={0}
-                />
-                <KpiCard
-                  icon={Bug}
-                  label="Detecções"
-                  value={String(data.detectionsCount)}
-                  index={1}
-                />
+                <KpiCard icon={Users} label={t.onlinePlayers} value={String(data.players)} index={0} />
+                <KpiCard icon={Bug} label={t.detections} value={String(data.detectionsCount)} index={1} />
                 <KpiCard
                   icon={ShieldCheck}
-                  label="Banimentos Ativos"
+                  label={t.activeBans}
                   value={String(data.bansCount)}
                   index={2}
                 />
                 <KpiCard
                   icon={Activity}
-                  label="Saúde (Watchdog)"
+                  label={t.health}
                   value={data.healthText}
                   hint={data.healthDesc}
                   index={3}
@@ -254,7 +238,7 @@ export function SecurityReportModal({
               >
                 <p className="mb-3 flex items-center gap-1.5 font-mono text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
                   <span className="h-[3px] w-[3px] rounded-[1px] bg-gold/70" />
-                  Distribuição de punições recentes
+                  {t.punishmentDistribution}
                 </p>
                 <div className="flex h-2 overflow-hidden rounded-full bg-accent">
                   {(["critical", "warning", "gold", "neutral"] as const).map((tone) => {
@@ -282,15 +266,15 @@ export function SecurityReportModal({
                 </div>
                 <div className="mt-3 flex flex-wrap gap-4 text-[11.5px] text-muted-foreground">
                   <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> Ban ·{" "}
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" /> {t.ban} ·{" "}
                     {tally.critical || 0}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Kick ·{" "}
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> {t.kick} ·{" "}
                     {tally.warning || 0}
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-gold" /> Flag · {tally.gold || 0}
+                    <span className="h-1.5 w-1.5 rounded-full bg-gold" /> {t.flag} · {tally.gold || 0}
                   </span>
                 </div>
               </motion.div>
@@ -303,11 +287,11 @@ export function SecurityReportModal({
               >
                 <p className="mb-3 flex items-center gap-1.5 font-mono text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
                   <span className="h-[3px] w-[3px] rounded-[1px] bg-gold/70" />
-                  Últimas detecções
+                  {t.latestDetections}
                 </p>
                 {data.detections.length === 0 ? (
                   <p className="py-4 text-center text-[12px] text-muted-foreground">
-                    Nenhuma detecção registrada.
+                    {t.noDetections}
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -330,7 +314,7 @@ export function SecurityReportModal({
               </motion.div>
 
               <p className="mt-6 text-center font-mono text-[9.5px] tracking-[0.1em] text-muted-foreground/50 uppercase">
-                Gerado automaticamente pelo GOAT Anticheat
+                {t.footer}
               </p>
             </div>
           </motion.div>

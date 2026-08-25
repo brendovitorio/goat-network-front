@@ -12,6 +12,7 @@ import {
 import logo from "@/assets/goat-logo.png";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { MriButton } from "@/components/ui/MriButton";
 
 const DISCORD_URL = "https://discord.gg/VpHaMPpEHZ";
 
@@ -186,14 +187,15 @@ export function Nav() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <button
+          <MriButton
+            variant="outline"
             onClick={() => setLang(lang === "pt" ? "en" : "pt")}
             aria-label={t.switchLangAria}
-            className="hidden items-center justify-center gap-1 rounded-full border border-hairline px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors hover:text-foreground sm:flex"
+            className="hidden rounded-full border-hairline px-2.5 py-1 text-[11px] sm:flex"
           >
             <Globe className="h-3.5 w-3.5" />
             {lang === "pt" ? "PT" : "EN"}
-          </button>
+          </MriButton>
           <a
             href={DISCORD_URL}
             target="_blank"
@@ -213,9 +215,10 @@ export function Nav() {
           </a>
           {user ? (
             <div className="relative z-[999]">
-              <button
+              <MriButton
+                variant="outline"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-md border border-hairline bg-surface-2 p-1 pr-2 backdrop-blur transition-all hover:bg-secondary"
+                className="gap-2 rounded-md border-hairline bg-surface-2 p-1 pr-2 backdrop-blur hover:bg-secondary"
               >
                 <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded bg-emerald-500/20 text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
                   {user.avatar && user.discordId ? (
@@ -237,7 +240,7 @@ export function Nav() {
                     menuOpen && "rotate-180",
                   )}
                 />
-              </button>
+              </MriButton>
 
               <AnimatePresence>
                 {menuOpen && (
@@ -258,52 +261,65 @@ export function Nav() {
                     </div>
 
                     <div className="pt-1.5 space-y-0.5">
-                      <a
-                        href="/servers"
-                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[12.5px] font-medium text-foreground transition-colors hover:bg-secondary"
+                      <MriButton
+                        asChild
+                        variant="ghost"
+                        className="w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-[12.5px] font-medium text-foreground hover:bg-secondary hover:text-foreground"
                       >
-                        <Server className="h-4 w-4" />
-                        {t.myServers}
-                      </a>
-                      <a
-                        href="/dashboard"
-                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[12.5px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        <a href="/servers">
+                          <Server className="h-4 w-4" />
+                          {t.myServers}
+                        </a>
+                      </MriButton>
+                      <MriButton
+                        asChild
+                        variant="ghost"
+                        className="w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-[12.5px] hover:bg-secondary"
                       >
-                        <LayoutDashboard className="h-4 w-4" />
-                        {t.dashboard}
-                      </a>
-                      <a
-                        href="/dashboard/configuracoes"
-                        className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[12.5px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                        <a href="/dashboard">
+                          <LayoutDashboard className="h-4 w-4" />
+                          {t.dashboard}
+                        </a>
+                      </MriButton>
+                      <MriButton
+                        asChild
+                        variant="ghost"
+                        className="w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-[12.5px] hover:bg-secondary"
                       >
-                        <User className="h-4 w-4" />
-                        {t.myAccount}
-                      </a>
+                        <a href="/dashboard/configuracoes">
+                          <User className="h-4 w-4" />
+                          {t.myAccount}
+                        </a>
+                      </MriButton>
                     </div>
 
                     <div className="my-1.5 border-t border-hairline" />
 
-                    <button
+                    <MriButton
+                      variant="ghost"
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[12.5px] text-red-400 transition-colors hover:bg-red-500/10"
+                      className="w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-[12.5px] text-red-400 hover:bg-red-500/10 hover:text-red-400"
                     >
                       <LogOut className="h-4 w-4" />
                       {t.logout}
-                    </button>
+                    </MriButton>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           ) : (
-            <a
-              href="/auth"
-              className="group flex h-9 items-center gap-2 rounded-full bg-primary pl-4 pr-1.5 text-[13px] font-semibold text-primary-foreground transition-transform hover:scale-[1.02]"
+            <MriButton
+              asChild
+              variant="solid"
+              className="group h-9 rounded-full pl-4 pr-1.5 text-[13px] transition-transform hover:scale-[1.02] hover:brightness-100"
             >
-              {t.getStarted}
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground">
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-              </span>
-            </a>
+              <a href="/auth">
+                {t.getStarted}
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-foreground/15 text-primary-foreground">
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </a>
+            </MriButton>
           )}
         </div>
       </div>

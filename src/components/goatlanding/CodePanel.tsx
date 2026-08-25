@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { MriCard } from "@/components/ui/MriCard";
 
 type Copy = {
   demoBadge: string;
@@ -94,7 +95,7 @@ export function CodePanel() {
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-[1120px] overflow-hidden rounded-xl border border-hairline bg-card shadow-[0_40px_120px_-40px_rgba(0,0,0,0.6)]">
+    <MriCard className="mx-auto w-full max-w-[1120px] overflow-hidden border-hairline bg-card p-0 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.6)]">
       <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-1.5 w-1.5">
@@ -160,6 +161,6 @@ export function CodePanel() {
           </div>
         </div>
       </div>
-    </div>
+    </MriCard>
   );
 }

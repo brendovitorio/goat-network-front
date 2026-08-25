@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search,
   Filter,
   ArrowRight,
   ChevronLeft,
@@ -37,6 +36,8 @@ import { cn } from "@/lib/utils";
 import goatLoading from "@/assets/goatloading.png";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { formatDate } from "@/lib/format";
+import { MriButton } from "@/components/ui/MriButton";
+import { MriSearchInput } from "@/components/ui/MriSearchInput";
 
 type Copy = {
   tabTitle: string;
@@ -426,28 +427,25 @@ export default function ServersPage() {
                     <p className="text-sm text-muted-foreground">{t.serversSubtitle}</p>
                   </div>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div className="relative min-w-0 flex-1 sm:flex-none">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input
-                        type="text"
-                        placeholder={t.searchPlaceholder}
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="h-10 w-full rounded-md border border-hairline bg-secondary pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-gold/30 focus:outline-none focus:ring-0 transition-colors sm:w-64"
-                      />
-                    </div>
+                    <MriSearchInput
+                      value={search}
+                      onChange={setSearch}
+                      placeholder={t.searchPlaceholder}
+                      className="sm:w-64"
+                    />
                     <div className="flex items-center gap-3">
-                      <button className="h-10 px-4 flex items-center gap-2 rounded-md border border-hairline bg-secondary text-sm font-medium hover:bg-secondary transition-colors text-foreground">
+                      <MriButton variant="outline" className="h-10 rounded-md border-hairline bg-secondary px-4 text-sm hover:bg-secondary">
                         <Filter className="h-4 w-4" />
                         {t.filters}
-                      </button>
-                      <button
+                      </MriButton>
+                      <MriButton
+                        variant="solid"
                         onClick={() => navigate("/products")}
-                        className="h-10 px-4 flex items-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:brightness-110 transition-colors"
+                        className="h-10 rounded-md px-4 text-sm"
                       >
                         <Zap className="h-4 w-4 fill-black" />
                         {t.newServer}
-                      </button>
+                      </MriButton>
                     </div>
                   </div>
                 </div>
@@ -474,19 +472,21 @@ export default function ServersPage() {
                       {search ? t.noServersMatch : t.noServersYet}
                     </p>
                     {search ? (
-                      <button
+                      <MriButton
+                        variant="ghost"
                         onClick={() => setSearch("")}
-                        className="text-sm text-foreground hover:underline"
+                        className="text-sm text-foreground hover:bg-transparent hover:underline"
                       >
                         {t.clearSearch}
-                      </button>
+                      </MriButton>
                     ) : (
-                      <button
+                      <MriButton
+                        variant="solid"
                         onClick={() => navigate("/products")}
-                        className="h-10 px-6 rounded-md bg-primary text-primary-foreground text-sm font-semibold hover:brightness-110 transition-colors"
+                        className="h-10 rounded-md px-6 text-sm"
                       >
                         {t.getLicense}
-                      </button>
+                      </MriButton>
                     )}
                   </div>
                 ) : (
@@ -559,9 +559,11 @@ export default function ServersPage() {
                               </div>
 
                               <div className="flex items-center gap-1 relative z-10">
-                                <button
+                                <MriButton
+                                  variant="ghost"
+                                  size="icon"
                                   onClick={(e) => toggleFavorite(server._id, e)}
-                                  className="h-8 w-8 rounded-md hover:bg-secondary flex items-center justify-center transition-colors text-muted-foreground hover:text-yellow-400"
+                                  className="rounded-md hover:text-yellow-400"
                                 >
                                   <Star
                                     className={cn(
@@ -569,10 +571,10 @@ export default function ServersPage() {
                                       isFav && "fill-yellow-400 text-yellow-400",
                                     )}
                                   />
-                                </button>
-                                <button className="h-8 w-8 rounded-md hover:bg-secondary flex items-center justify-center transition-colors text-muted-foreground">
+                                </MriButton>
+                                <MriButton variant="ghost" size="icon" className="rounded-md">
                                   <MoreHorizontal className="h-4 w-4" />
-                                </button>
+                                </MriButton>
                               </div>
                             </div>
 
@@ -661,14 +663,15 @@ export default function ServersPage() {
                           <p className="text-sm font-semibold text-foreground">{d.name}</p>
                           <p className="text-xs text-muted-foreground">{d.downloadFileName}</p>
                         </div>
-                        <button
+                        <MriButton
+                          variant="ghost"
                           onClick={() => handleDownload(d)}
                           disabled={downloadingKey === d.code}
-                          className="flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-[12.5px] font-semibold text-background hover:opacity-90 disabled:opacity-50"
+                          className="rounded-lg bg-foreground text-background hover:bg-foreground hover:opacity-90"
                         >
-                          <Download className="h-3.5 w-3.5" />{" "}
+                          <Download className="h-3.5 w-3.5" />
                           {downloadingKey === d.code ? t.downloading : t.download}
-                        </button>
+                        </MriButton>
                       </div>
                     ))}
                   </div>
@@ -755,12 +758,13 @@ export default function ServersPage() {
 
                     <div className="h-px bg-secondary" />
 
-                    <button
+                    <MriButton
+                      variant="danger-outline"
                       onClick={handleLogout}
-                      className="h-10 px-4 rounded-md border border-red-500/30 bg-red-500/10 text-sm font-semibold text-red-400 hover:bg-red-500/20 transition-colors"
+                      className="h-10 rounded-md px-4 text-sm hover:bg-red-500/20"
                     >
                       {t.logout}
-                    </button>
+                    </MriButton>
                   </div>
                 )}
               </motion.div>
