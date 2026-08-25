@@ -216,6 +216,14 @@ export const discordAvatarUrl = (discordId?: string, avatar?: string): string | 
   return `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.${ext}`;
 };
 
+export type ChangelogEntry = {
+  id: string;
+  author: string | null;
+  avatarUrl: string | null;
+  content: string;
+  timestamp: string;
+};
+
 export type StaffMember = {
   name: string;
   role: string;
@@ -436,6 +444,17 @@ export const api = {
       if (!res.ok) return [];
       const data = await res.json();
       return data.plans || [];
+    } catch {
+      return [];
+    }
+  },
+
+  getChangelog: async (): Promise<ChangelogEntry[]> => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/changelog`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.entries || [];
     } catch {
       return [];
     }
