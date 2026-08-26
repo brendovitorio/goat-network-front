@@ -6,7 +6,7 @@ import { api, type FounderItem } from "@/lib/goat-api";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MriButton } from "@/components/ui/MriButton";
 
-const DISCORD_URL = "https://discord.gg/VpHaMPpEHZ";
+const DISCORD_URL = "https://discord.gg/goatnetworkgg";
 
 type Copy = {
   tabTitle: string;

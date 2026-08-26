@@ -115,7 +115,7 @@ export function FAQ() {
               variant="outline"
               className="mt-5 inline-flex rounded-md border-hairline bg-surface-2 px-4 py-2 text-[12.5px] hover:border-gold/40 hover:bg-surface-2 hover:text-foreground"
             >
-              <a href="https://discord.gg/VpHaMPpEHZ" target="_blank" rel="noreferrer">
+              <a href="https://discord.gg/goatnetworkgg" target="_blank" rel="noreferrer">
                 {t.joinDiscord}
               </a>
             </MriButton>
@@ -302,7 +302,7 @@ const footerPt: FooterCopy = {
       t: "Empresa",
       l: [
         { label: "Sobre a Goat Network", href: "/empresa" },
-        { label: "Discord", href: "https://discord.gg/VpHaMPpEHZ" },
+        { label: "Discord", href: "https://discord.gg/goatnetworkgg" },
       ],
     },
     {
@@ -333,7 +333,7 @@ const footerEn: FooterCopy = {
       t: "Company",
       l: [
         { label: "About Goat Network", href: "/empresa" },
-        { label: "Discord", href: "https://discord.gg/VpHaMPpEHZ" },
+        { label: "Discord", href: "https://discord.gg/goatnetworkgg" },
       ],
     },
     {

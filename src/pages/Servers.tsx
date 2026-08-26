@@ -399,7 +399,7 @@ export default function ServersPage() {
 
             <div className="flex shrink-0 items-center gap-4 text-[13px] text-muted-foreground">
               <a
-                href="https://discord.gg/VpHaMPpEHZ"
+                href="https://discord.gg/goatnetworkgg"
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-1.5 transition-colors hover:text-gold"
