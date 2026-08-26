@@ -18,6 +18,9 @@ import {
   Pencil,
   ChevronDown,
   X,
+  Settings2,
+  Gavel,
+  BrainCircuit,
 } from "lucide-react";
 import logo from "@/assets/goat2.png";
 import { Link, useLocation } from "react-router-dom";
@@ -49,6 +52,9 @@ type Copy = {
   navEvidence: string;
   navBans: string;
   navProtections: string;
+  navCore: string;
+  navPunishments: string;
+  navGoatAi: string;
   navEvents: string;
   navGlobalBan: string;
   navAcId: string;
@@ -79,6 +85,9 @@ const pt: Copy = {
   navEvidence: "Evidências",
   navBans: "Banimentos",
   navProtections: "Proteções",
+  navCore: "Núcleo",
+  navPunishments: "Punições",
+  navGoatAi: "GOAT AI",
   navEvents: "Eventos",
   navGlobalBan: "Global Ban",
   navAcId: "AC-ID",
@@ -109,6 +118,9 @@ const en: Copy = {
   navEvidence: "Evidence",
   navBans: "Bans",
   navProtections: "Protections",
+  navCore: "Core",
+  navPunishments: "Punishments",
+  navGoatAi: "GOAT AI",
   navEvents: "Events",
   navGlobalBan: "Global Ban",
   navAcId: "AC-ID",
@@ -142,6 +154,9 @@ const getMonitoramento = (t: Copy): Item[] => [
 
 const getInfraestrutura = (t: Copy): Item[] => [
   { icon: Boxes, label: t.navProtections, slug: "protecoes" },
+  { icon: Settings2, label: t.navCore, slug: "nucleo" },
+  { icon: Gavel, label: t.navPunishments, slug: "punicoes" },
+  { icon: BrainCircuit, label: t.navGoatAi, slug: "goat-ai" },
   { icon: Activity, label: t.navEvents, slug: "eventos" },
   { icon: Globe, label: t.navGlobalBan, slug: "global-ban" },
   { icon: BadgeCheck, label: t.navAcId, slug: "ac-id" },

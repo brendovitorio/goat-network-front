@@ -224,6 +224,50 @@ export type ChangelogEntry = {
   timestamp: string;
 };
 
+export type AiConfig = {
+  enabled: boolean;
+  mode: "shadow" | "development";
+  minScoreToAnalyze: number;
+  analysisCooldownSec: number;
+  confidenceThreshold: number;
+  autoFlagThreshold: number;
+  autoKickThreshold: number;
+  autoBanThreshold: number;
+  maxRequestsPerMinute: number;
+  weights: { traditional: number; ai: number; evidence: number; history: number };
+};
+
+export type AiAnalysis = {
+  _id: string;
+  playerAcId: string;
+  provider: string;
+  model: string;
+  status: "COMPLETED" | "INVALID" | "ERROR";
+  riskLevel?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  confidence?: number;
+  recommendedAction?: "IGNORE" | "FLAG" | "KICK" | "BAN" | "REVIEW";
+  reasonCodes?: string[];
+  evidenceAssessment?: { detectionId: string; weight: number; assessment: string }[];
+  summary?: string;
+  falsePositiveRisk?: number;
+  latencyMs?: number;
+  errorMessage?: string;
+  createdAt: string;
+};
+
+export type AiDecision = {
+  _id: string;
+  playerAcId: string;
+  analysisId: string;
+  decision: "IGNORE" | "REVIEW" | "FLAG";
+  reason: string;
+  traditionalScore: number;
+  aiConfidence?: number;
+  finalScore: number;
+  executed: boolean;
+  createdAt: string;
+};
+
 export type StaffMember = {
   name: string;
   role: string;
@@ -937,6 +981,38 @@ export const api = {
       return data.user ? { ...data.user, isCeo: Boolean(data.isCeo) } : null;
     } catch {
       return null;
+    }
+  },
+
+  getAiConfig: async (serverId: string): Promise<AiConfig> => {
+    const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/config`, { headers: getHeaders() });
+    return data.aiConfig;
+  },
+
+  updateAiConfig: async (serverId: string, payload: Partial<AiConfig>): Promise<AiConfig> => {
+    const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/config`, {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return data.aiConfig;
+  },
+
+  getAiAnalyses: async (serverId: string): Promise<AiAnalysis[]> => {
+    try {
+      const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/analyses`, { headers: getHeaders() });
+      return data.analyses || [];
+    } catch {
+      return [];
+    }
+  },
+
+  getAiDecisions: async (serverId: string): Promise<AiDecision[]> => {
+    try {
+      const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/decisions`, { headers: getHeaders() });
+      return data.decisions || [];
+    } catch {
+      return [];
     }
   },
 

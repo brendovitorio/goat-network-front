@@ -23,17 +23,21 @@ import {
   AlertTriangle,
   Database,
   Trash2,
+  Plus,
 } from "lucide-react";
 import { Panel, Stat, Table, Tag, TAG_TONE_CLASS } from "./shell";
+import type { TagTone } from "./shell";
 import { PROTECTION_MODULE_FIELDS } from "@/lib/protectionFields";
+import { CORE_FIELD_GROUPS, PUNISHMENT_FIELDS, STAFF_BYPASS_LEVELS } from "@/lib/coreAndPunishmentFields";
 import { MriButton } from "@/components/ui/MriButton";
 import { MriCard } from "@/components/ui/MriCard";
 import { MriSearchInput } from "@/components/ui/MriSearchInput";
-import { MriInput } from "@/components/ui/MriInput";
+import { MriInput, MriTextarea } from "@/components/ui/MriInput";
 import { MriToggle } from "@/components/ui/MriToggle";
 import { MriPunishmentSelect } from "@/components/ui/MriPunishmentSelect";
 import { toneForAction } from "@/components/ui/mri-badge-variants";
 import { api, ServerStatus, LicenseItem, resolveLicenseForServer } from "@/lib/goat-api";
+import type { AiConfig as AiConfigType, AiAnalysis as AiAnalysisType, AiDecision as AiDecisionType } from "@/lib/goat-api";
 import { cn } from "@/lib/utils";
 import { VolumeChart } from "@/goatdash/VolumeChart";
 import { useDialog } from "./Dialog";
@@ -2732,12 +2736,87 @@ function CampoAvancadoWeb({
   valorSalvo,
   onSalvar,
 }: {
-  campo: { key: string; label: string; help: string };
+  campo: { key: string; label: string; help: string; type?: string; options?: string[] };
   valorSalvo?: string;
   onSalvar: (fieldKey: string, valor: string) => void;
 }) {
-  const [valor, setValor] = useState(valorSalvo ?? "");
-  const sujo = valor !== (valorSalvo ?? "");
+  const ehBooleano = campo.type === "boolean";
+  const [valor, setValor] = useState(ehBooleano ? String(valorSalvo === "true") : (valorSalvo ?? ""));
+  const sujo = valor !== (ehBooleano ? String(valorSalvo === "true") : (valorSalvo ?? ""));
+
+  if (ehBooleano) {
+    return (
+      <div className="flex items-center justify-between gap-3 text-[11px]">
+        <div className="min-w-0 flex-1">
+          <div className="text-foreground">{campo.label}</div>
+          <div className="mt-0.5 text-[10.5px] text-muted-foreground">{campo.help}</div>
+        </div>
+        <MriToggle
+          checked={valor === "true"}
+          ariaLabel={campo.label}
+          onChange={() => {
+            const novo = String(valor !== "true");
+            setValor(novo);
+            onSalvar(campo.key, novo);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (campo.type === "select") {
+    return (
+      <div className="flex items-start justify-between gap-3 text-[11px]">
+        <div className="min-w-0 flex-1">
+          <div className="text-foreground">{campo.label}</div>
+          <div className="mt-0.5 text-[10.5px] text-muted-foreground">{campo.help}</div>
+        </div>
+        <select
+          value={valor}
+          onChange={(e) => {
+            setValor(e.target.value);
+            onSalvar(campo.key, e.target.value);
+          }}
+          className="shrink-0 rounded-md border border-border bg-card/60 px-2 py-1 text-[10.5px] text-foreground outline-none focus:border-gold/50"
+        >
+          {(campo.options || []).map((op) => (
+            <option key={op} value={op}>
+              {op}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  if (campo.type === "text") {
+    return (
+      <div className="flex flex-col gap-1.5 text-[11px]">
+        <div>
+          <div className="text-foreground">{campo.label}</div>
+          <div className="mt-0.5 text-[10.5px] text-muted-foreground">{campo.help}</div>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <MriTextarea
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            rows={2}
+            className="text-[11px]"
+          />
+          {sujo && (
+            <MriButton
+              variant="ghost"
+              size="icon"
+              onClick={() => onSalvar(campo.key, valor)}
+              className="h-8 w-8 shrink-0 text-gold hover:bg-gold/10"
+            >
+              <Check className="h-3 w-3" />
+            </MriButton>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-start justify-between gap-3 text-[11px]">
@@ -2745,9 +2824,7 @@ function CampoAvancadoWeb({
         <div className="text-foreground">{campo.label}</div>
         <div className="mt-0.5 text-[10.5px] text-muted-foreground">{campo.help}</div>
         {valorSalvo === undefined && (
-          <div className="mt-0.5 text-[10.5px] text-muted-foreground/70">
-            Ainda não ajustado - usando o padrão do arquivo .lua.
-          </div>
+          <div className="mt-0.5 text-[10.5px] text-muted-foreground/70">Ainda não ajustado - usando o padrão do sistema.</div>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1.5">
@@ -2769,6 +2846,242 @@ function CampoAvancadoWeb({
           </MriButton>
         )}
       </div>
+    </div>
+  );
+}
+
+export function Nucleo() {
+  const [allFieldOverrides, setAllFieldOverrides] = useState<Record<string, Record<string, string>> | null>(null);
+
+  useEffect(() => {
+    const activeId = localStorage.getItem("goat_active_server_id");
+    if (!activeId) {
+      setAllFieldOverrides({});
+      return;
+    }
+    api.getServerById(activeId).then((server: any) => {
+      setAllFieldOverrides(server?.anticheatConfig?.fieldOverrides || {});
+    });
+  }, []);
+
+  const persist = async (updated: Record<string, Record<string, string>>) => {
+    const activeServerId = localStorage.getItem("goat_active_server_id");
+    if (!activeServerId) return;
+    await api.updateServerConfig(activeServerId, { fieldOverrides: updated });
+  };
+
+  if (allFieldOverrides === null) {
+    return (
+      <Panel title="Núcleo" desc="Comportamento geral do sistema.">
+        <p className="py-8 text-center text-[12px] text-muted-foreground">Carregando...</p>
+      </Panel>
+    );
+  }
+
+  const coreOverrides = allFieldOverrides.Core || {};
+
+  const handleFieldChange = (fieldKey: string, valor: string) => {
+    const updated = { ...allFieldOverrides, Core: { ...coreOverrides, [fieldKey]: valor } };
+    setAllFieldOverrides(updated);
+    persist(updated);
+  };
+
+  return (
+    <Panel
+      title="Núcleo"
+      desc="Comportamento geral do sistema (heartbeat, watchdog, tolerância a falso positivo). Aplica no próximo heartbeat do servidor, sem precisar reiniciar."
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        {CORE_FIELD_GROUPS.map((g) => (
+          <MriCard key={g.key} className="flex flex-col gap-3 p-4">
+            <p className="text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">{g.label}</p>
+            <div className="flex flex-col gap-2.5">
+              {g.fields.map((f) => (
+                <CampoAvancadoWeb key={f.key} campo={f} valorSalvo={coreOverrides[f.key]} onSalvar={handleFieldChange} />
+              ))}
+            </div>
+          </MriCard>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+export function Punicoes() {
+  const [allFieldOverrides, setAllFieldOverrides] = useState<Record<string, Record<string, string>> | null>(null);
+  const [novoCargo, setNovoCargo] = useState("");
+  const [novoNivel, setNovoNivel] = useState(1);
+
+  useEffect(() => {
+    const activeId = localStorage.getItem("goat_active_server_id");
+    if (!activeId) {
+      setAllFieldOverrides({});
+      return;
+    }
+    api.getServerById(activeId).then((server: any) => {
+      setAllFieldOverrides(server?.anticheatConfig?.fieldOverrides || {});
+    });
+  }, []);
+
+  const persist = async (updated: Record<string, Record<string, string>>) => {
+    const activeServerId = localStorage.getItem("goat_active_server_id");
+    if (!activeServerId) return;
+    await api.updateServerConfig(activeServerId, { fieldOverrides: updated });
+  };
+
+  if (allFieldOverrides === null) {
+    return (
+      <Panel title="Punições" desc="Como o GOAT pune um jogador.">
+        <p className="py-8 text-center text-[12px] text-muted-foreground">Carregando...</p>
+      </Panel>
+    );
+  }
+
+  const punishmentOverrides = allFieldOverrides.Punishment || {};
+
+  const handleFieldChange = (fieldKey: string, valor: string) => {
+    const updated = { ...allFieldOverrides, Punishment: { ...punishmentOverrides, [fieldKey]: valor } };
+    setAllFieldOverrides(updated);
+    persist(updated);
+  };
+
+  let roles: { role: string; level: number }[] = [];
+  try {
+    const raw = punishmentOverrides["StaffBypass.Roles"];
+    if (raw) {
+      const mapa = JSON.parse(raw) as Record<string, number>;
+      roles = Object.entries(mapa).map(([role, level]) => ({ role, level }));
+    }
+  } catch {
+    roles = [];
+  }
+  roles.sort((a, b) => a.role.localeCompare(b.role));
+
+  let ignoredModules: string[] = [];
+  try {
+    const raw = punishmentOverrides["StaffBypass.IgnoredModulesForMods"];
+    if (raw) ignoredModules = JSON.parse(raw) as string[];
+  } catch {
+    ignoredModules = [];
+  }
+
+  const saveRoles = (novasRoles: { role: string; level: number }[]) => {
+    const mapa: Record<string, number> = {};
+    novasRoles.forEach((r) => {
+      mapa[r.role] = r.level;
+    });
+    handleFieldChange("StaffBypass.Roles", JSON.stringify(mapa));
+  };
+
+  const adicionarCargo = () => {
+    const cargo = novoCargo.trim();
+    if (!cargo || roles.some((r) => r.role === cargo)) return;
+    saveRoles([...roles, { role: cargo, level: novoNivel }]);
+    setNovoCargo("");
+  };
+
+  const removerCargo = (cargo: string) => saveRoles(roles.filter((r) => r.role !== cargo));
+
+  const mudarNivelCargo = (cargo: string, nivel: number) =>
+    saveRoles(roles.map((r) => (r.role === cargo ? { ...r, level: nivel } : r)));
+
+  const alternarModuloIgnorado = (moduleKey: string) => {
+    const nova = ignoredModules.includes(moduleKey)
+      ? ignoredModules.filter((m) => m !== moduleKey)
+      : [...ignoredModules, moduleKey];
+    handleFieldChange("StaffBypass.IgnoredModulesForMods", JSON.stringify(nova));
+  };
+
+  const availableModules = Object.entries(PROTECTION_MODULE_KEYS).map(([label, key]) => ({ key, label }));
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Panel
+        title="Punições"
+        desc="Como o GOAT pune um jogador - mensagens, duração padrão e ação de fallback. Aplica no próximo heartbeat do servidor, sem precisar reiniciar."
+      >
+        <MriCard className="flex flex-col gap-2.5 p-4">
+          {PUNISHMENT_FIELDS.map((f) => (
+            <CampoAvancadoWeb key={f.key} campo={f} valorSalvo={punishmentOverrides[f.key]} onSalvar={handleFieldChange} />
+          ))}
+        </MriCard>
+      </Panel>
+
+      <Panel
+        title="Bypass de staff"
+        desc="Cargos que ficam total ou parcialmente imunes ao anticheat (ex: staff usando noclip em serviço)."
+      >
+        <MriCard className="flex flex-col gap-3 p-4">
+          <div className="flex flex-col gap-2">
+            {roles.length === 0 && <p className="text-[11px] text-muted-foreground">Nenhum cargo configurado ainda.</p>}
+            {roles.map((r) => (
+              <div key={r.role} className="flex items-center justify-between gap-2 text-[11px]">
+                <span className="font-mono">{r.role}</span>
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={r.level}
+                    onChange={(e) => mudarNivelCargo(r.role, Number(e.target.value))}
+                    className="rounded-md border border-border bg-card/60 px-1.5 py-1 text-[10.5px] text-foreground outline-none focus:border-gold/50"
+                  >
+                    {STAFF_BYPASS_LEVELS.map((n) => (
+                      <option key={n.value} value={n.value}>
+                        {n.label}
+                      </option>
+                    ))}
+                  </select>
+                  <MriButton variant="ghost" size="icon" className="h-6 w-6" onClick={() => removerCargo(r.role)}>
+                    <Trash2 className="h-3 w-3" />
+                  </MriButton>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-1.5 border-t border-hairline pt-3">
+            <MriInput
+              value={novoCargo}
+              onChange={(e) => setNovoCargo(e.target.value)}
+              placeholder="nome do cargo (ex: mod)"
+              className="text-[11px]"
+            />
+            <select
+              value={novoNivel}
+              onChange={(e) => setNovoNivel(Number(e.target.value))}
+              className="shrink-0 rounded-md border border-border bg-card/60 px-1.5 py-1.5 text-[10.5px] text-foreground outline-none focus:border-gold/50"
+            >
+              {STAFF_BYPASS_LEVELS.map((n) => (
+                <option key={n.value} value={n.value}>
+                  {n.label}
+                </option>
+              ))}
+            </select>
+            <MriButton variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={adicionarCargo}>
+              <Plus className="h-3.5 w-3.5" />
+            </MriButton>
+          </div>
+        </MriCard>
+      </Panel>
+
+      <Panel title="Módulos ignorados pra cargos parciais" desc='Módulos que cargos com nível "Ignora selecionados" não sofrem detecção.'>
+        <div className="flex flex-wrap gap-2">
+          {availableModules.map((m) => {
+            const ativo = ignoredModules.includes(m.key);
+            return (
+              <button
+                key={m.key}
+                onClick={() => alternarModuloIgnorado(m.key)}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-[11px] transition-colors",
+                  ativo
+                    ? "border-gold/40 bg-gold/10 text-gold"
+                    : "border-border bg-card/60 text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {m.label}
+              </button>
+            );
+          })}
+        </div>
+      </Panel>
     </div>
   );
 }
@@ -2931,6 +3244,289 @@ export function AcId() {
               </Tag>,
             ])}
           />
+        )}
+      </Panel>
+    </div>
+  );
+}
+
+const AI_MODE_LABELS: Record<string, string> = {
+  shadow: "Sombra (só registra)",
+  development: "Desenvolvimento (teste)",
+};
+
+const AI_RISK_TONE: Record<string, TagTone> = { LOW: "success", MEDIUM: "warning", HIGH: "warning", CRITICAL: "critical" };
+const AI_DECISION_TONE: Record<string, TagTone> = { IGNORE: "neutral", REVIEW: "warning", FLAG: "critical" };
+
+export function GoatAi() {
+  const [aiConfig, setAiConfig] = useState<AiConfigType | null>(null);
+  const [form, setForm] = useState<AiConfigType | null>(null);
+  const [decisions, setDecisions] = useState<AiDecisionType[]>([]);
+  const [analysesById, setAnalysesById] = useState<Record<string, AiAnalysisType>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const activeId = localStorage.getItem("goat_active_server_id");
+    if (!activeId) {
+      setLoading(false);
+      return;
+    }
+    Promise.all([api.getAiConfig(activeId), api.getAiDecisions(activeId), api.getAiAnalyses(activeId)])
+      .then(([configRes, decisionsList, analysesList]) => {
+        setAiConfig(configRes);
+        setForm(configRes);
+        setDecisions(decisionsList);
+        const map: Record<string, AiAnalysisType> = {};
+        analysesList.forEach((a) => {
+          map[a._id] = a;
+        });
+        setAnalysesById(map);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const salvarConfig = async () => {
+    const activeId = localStorage.getItem("goat_active_server_id");
+    if (!activeId || !form) return;
+    setSaving(true);
+    try {
+      const atualizado = await api.updateAiConfig(activeId, form);
+      setAiConfig(atualizado);
+      setForm(atualizado);
+    } catch {
+      // erro já vira mensagem genérica pelo safeFetchJson - sem toast dedicado aqui ainda
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Panel title="GOAT AI" desc="Camada de análise por IA sobre as detecções tradicionais.">
+        <p className="py-8 text-center text-[12px] text-muted-foreground">Carregando...</p>
+      </Panel>
+    );
+  }
+
+  if (!aiConfig || !form) {
+    return (
+      <Panel title="GOAT AI" desc="Camada de análise por IA sobre as detecções tradicionais.">
+        <p className="py-8 text-center text-[12px] text-muted-foreground">Selecione um servidor pra ver o GOAT AI.</p>
+      </Panel>
+    );
+  }
+
+  const confiancas = decisions.map((d) => d.aiConfidence).filter((c): c is number => typeof c === "number");
+  const confiancaMedia = confiancas.length ? Math.round((confiancas.reduce((a, b) => a + b, 0) / confiancas.length) * 100) : null;
+  const altoRisco = decisions.filter((d) => {
+    const a = analysesById[d.analysisId];
+    return a?.riskLevel === "HIGH" || a?.riskLevel === "CRITICAL";
+  }).length;
+
+  const decisaoExpandida = expandedId ? decisions.find((d) => d._id === expandedId) : null;
+  const analiseExpandida = decisaoExpandida ? analysesById[decisaoExpandida.analysisId] : null;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Panel
+        title="GOAT AI"
+        desc="Camada de análise por IA sobre as detecções tradicionais - só recomenda, quem decide é o motor de risco determinístico. Hoje roda em modo sombra: nunca executa punição sozinha."
+      >
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat label="Status" value={aiConfig.enabled ? "Ativo" : "Desligado"} hint={AI_MODE_LABELS[aiConfig.mode]} />
+          <Stat label="Decisões registradas" value={String(decisions.length)} />
+          <Stat label="Alto risco (HIGH/CRITICAL)" value={String(altoRisco)} />
+          <Stat label="Confiança média da IA" value={confiancaMedia !== null ? `${confiancaMedia}%` : "—"} />
+        </div>
+      </Panel>
+
+      <Panel title="Configuração" desc="Liga/desliga a análise por IA pra este servidor e ajusta os pesos do motor de risco.">
+        <MriCard className="flex flex-col gap-4 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[13px] font-medium">GOAT AI ativado</p>
+              <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                Sem isso, nenhuma detecção é analisada pela IA - o anticheat tradicional continua igual de qualquer forma.
+              </p>
+            </div>
+            <MriToggle checked={form.enabled} onChange={() => setForm({ ...form, enabled: !form.enabled })} ariaLabel="GOAT AI ativado" />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">Modo</span>
+              <select
+                value={form.mode}
+                onChange={(e) => setForm({ ...form, mode: e.target.value as AiConfigType["mode"] })}
+                className="w-full rounded-lg border border-border bg-card/60 px-3 py-2 text-[13px] text-foreground outline-none focus:border-gold/50"
+              >
+                <option value="shadow">Sombra (só registra)</option>
+                <option value="development">Desenvolvimento (teste)</option>
+              </select>
+            </label>
+            <MriInput
+              label="Score mínimo pra analisar"
+              type="number"
+              value={form.minScoreToAnalyze}
+              onChange={(e) => setForm({ ...form, minScoreToAnalyze: Number(e.target.value) })}
+            />
+            <MriInput
+              label="Cooldown entre análises (segundos)"
+              type="number"
+              value={form.analysisCooldownSec}
+              onChange={(e) => setForm({ ...form, analysisCooldownSec: Number(e.target.value) })}
+            />
+            <MriInput
+              label="Limite de requisições/minuto"
+              type="number"
+              value={form.maxRequestsPerMinute}
+              onChange={(e) => setForm({ ...form, maxRequestsPerMinute: Number(e.target.value) })}
+            />
+          </div>
+
+          <div className="border-t border-hairline pt-3">
+            <p className="mb-2 text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">Pesos do motor de risco</p>
+            <div className="grid gap-3 sm:grid-cols-4">
+              <MriInput
+                label="Tradicional"
+                type="number"
+                step="0.05"
+                value={form.weights.traditional}
+                onChange={(e) => setForm({ ...form, weights: { ...form.weights, traditional: Number(e.target.value) } })}
+              />
+              <MriInput
+                label="IA"
+                type="number"
+                step="0.05"
+                value={form.weights.ai}
+                onChange={(e) => setForm({ ...form, weights: { ...form.weights, ai: Number(e.target.value) } })}
+              />
+              <MriInput
+                label="Evidência"
+                type="number"
+                step="0.05"
+                value={form.weights.evidence}
+                onChange={(e) => setForm({ ...form, weights: { ...form.weights, evidence: Number(e.target.value) } })}
+              />
+              <MriInput
+                label="Histórico"
+                type="number"
+                step="0.05"
+                value={form.weights.history}
+                onChange={(e) => setForm({ ...form, weights: { ...form.weights, history: Number(e.target.value) } })}
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-hairline pt-3">
+            <p className="mb-2 text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+              Limiares de ação automática{" "}
+              <span className="normal-case text-muted-foreground/70">(ainda sem efeito - a IA nunca executa punição sozinha nesta versão)</span>
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <MriInput
+                label="Auto-flag"
+                type="number"
+                step="0.05"
+                value={form.autoFlagThreshold}
+                onChange={(e) => setForm({ ...form, autoFlagThreshold: Number(e.target.value) })}
+              />
+              <MriInput
+                label="Auto-kick"
+                type="number"
+                step="0.05"
+                value={form.autoKickThreshold}
+                onChange={(e) => setForm({ ...form, autoKickThreshold: Number(e.target.value) })}
+              />
+              <MriInput
+                label="Auto-ban"
+                type="number"
+                step="0.05"
+                value={form.autoBanThreshold}
+                onChange={(e) => setForm({ ...form, autoBanThreshold: Number(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div>
+            <MriButton onClick={salvarConfig} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar configuração"}
+            </MriButton>
+          </div>
+        </MriCard>
+      </Panel>
+
+      <Panel title="Decisões recentes" desc="Cada linha combina o score tradicional com a recomendação da IA - clique na data pra ver os detalhes da análise.">
+        {decisions.length === 0 ? (
+          <p className="py-8 text-center text-[12px] text-muted-foreground">Nenhuma decisão registrada ainda.</p>
+        ) : (
+          <Table
+            cols="1fr .8fr .8fr .8fr .8fr 1fr"
+            head={["Jogador", "Decisão", "Score Final", "Confiança IA", "Score Tradicional", "Quando"]}
+            rows={decisions.map((d) => [
+              <span className="font-mono text-[11.5px] text-muted-foreground" key={`acid-${d._id}`}>
+                {d.playerAcId}
+              </span>,
+              <Tag tone={AI_DECISION_TONE[d.decision] || "neutral"} key={`decision-${d._id}`}>
+                {d.decision}
+              </Tag>,
+              d.finalScore.toFixed(1),
+              typeof d.aiConfidence === "number" ? `${Math.round(d.aiConfidence * 100)}%` : "—",
+              d.traditionalScore.toFixed(1),
+              <button
+                key={`open-${d._id}`}
+                onClick={() => setExpandedId(expandedId === d._id ? null : d._id)}
+                className="text-[11.5px] text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {formatDateTime(d.createdAt)}
+              </button>,
+            ])}
+          />
+        )}
+
+        {decisaoExpandida && analiseExpandida && (
+          <MriCard className="mt-4 flex flex-col gap-3 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[13px] font-medium">Análise de {decisaoExpandida.playerAcId}</p>
+              {analiseExpandida.riskLevel && <Tag tone={AI_RISK_TONE[analiseExpandida.riskLevel] || "neutral"}>{analiseExpandida.riskLevel}</Tag>}
+            </div>
+            {analiseExpandida.status !== "COMPLETED" ? (
+              <p className="text-[12px] text-muted-foreground">
+                Análise não concluída ({analiseExpandida.status}) — {analiseExpandida.errorMessage || "sem detalhes adicionais"}.
+              </p>
+            ) : (
+              <>
+                <p className="text-[12.5px] leading-relaxed text-foreground/80">{analiseExpandida.summary}</p>
+                {analiseExpandida.reasonCodes && analiseExpandida.reasonCodes.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {analiseExpandida.reasonCodes.map((code) => (
+                      <span key={code} className="rounded-full border border-border bg-card/60 px-2.5 py-1 font-mono text-[10.5px] text-muted-foreground">
+                        {code}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {analiseExpandida.evidenceAssessment && analiseExpandida.evidenceAssessment.length > 0 && (
+                  <div className="flex flex-col gap-1.5 border-t border-hairline pt-3">
+                    {analiseExpandida.evidenceAssessment.map((ev, i) => (
+                      <div key={i} className="flex items-start justify-between gap-3 text-[11.5px]">
+                        <span className="text-foreground/80">{ev.assessment}</span>
+                        <span className="shrink-0 font-mono text-muted-foreground">{Math.round(ev.weight * 100)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[10.5px] text-muted-foreground">
+                  Modelo: {analiseExpandida.model} · Risco de falso positivo:{" "}
+                  {typeof analiseExpandida.falsePositiveRisk === "number" ? `${Math.round(analiseExpandida.falsePositiveRisk * 100)}%` : "—"} ·{" "}
+                  {formatDateTime(analiseExpandida.createdAt)}
+                </p>
+              </>
+            )}
+          </MriCard>
         )}
       </Panel>
     </div>
@@ -3743,6 +4339,9 @@ export const SECTION_COMPONENTS: Record<string, React.ComponentType> = {
   evidencias: Evidence,
   banimentos: () => <Bans />,
   protecoes: Protections,
+  nucleo: Nucleo,
+  punicoes: Punicoes,
+  "goat-ai": GoatAi,
   eventos: Events,
   "global-ban": () => <Bans globalOnly />,
   "ac-id": AcId,
