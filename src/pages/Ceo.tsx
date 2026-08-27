@@ -16,6 +16,9 @@ import {
   Copy,
   Upload,
   Pencil,
+  KeyRound,
+  Search,
+  ShieldAlert,
 } from "lucide-react";
 import { Nav } from "@/components/goatlanding/Nav";
 import {
@@ -24,6 +27,7 @@ import {
   ProductItem,
   UserProfile,
   CouponItem,
+  AdminLicenseSearchResult,
   productLogoUrl,
 } from "@/lib/goat-api";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -127,6 +131,34 @@ type Copy = {
     expiresSuffix: (date: string) => string;
     deactivate: string;
   };
+  licenses: {
+    heading: string;
+    description: string;
+    discordIdLabel: string;
+    discordIdPlaceholder: string;
+    licenseKeyLabel: string;
+    licenseKeyPlaceholder: string;
+    searchIdle: string;
+    searchBusy: string;
+    noResults: string;
+    licensesHeading: string;
+    statusLabel: string;
+    planLabel: string;
+    expiresLabel: string;
+    setActive: string;
+    setSuspended: string;
+    setRevoked: string;
+    serversHeading: string;
+    serverIpLabel: string;
+    authStatusLabel: string;
+    authorizedIpsLabel: string;
+    authorizedIpsPlaceholder: string;
+    authorizedIpsHint: string;
+    noAuthorizedIps: string;
+    saveIps: string;
+    savingIps: string;
+    clearIps: string;
+  };
   catalog: {
     heading: string;
     refresh: string;
@@ -198,6 +230,13 @@ type Copy = {
     createCouponError: string;
     confirmDeactivateCoupon: (code: string) => string;
     deactivateCouponError: string;
+    provideDiscordIdOrKey: string;
+    searchLicenseError: string;
+    ipsUpdated: string;
+    updateIpsError: string;
+    statusUpdated: (status: string) => string;
+    updateStatusError: string;
+    confirmStatusChange: (key: string, status: string) => string;
   };
 };
 
@@ -300,6 +339,36 @@ const pt: Copy = {
     expiresSuffix: (date) => ` · expira ${date}`,
     deactivate: "Desativar",
   },
+  licenses: {
+    heading: "Gerenciamento de licenças",
+    description:
+      "Busca por Discord ID ou chave de licença pra ver as licenças e servidores de um cliente — útil pra desbloquear IP depois de troca de VPS, suspender licença por abuso ou reativar.",
+    discordIdLabel: "Discord ID do cliente",
+    discordIdPlaceholder: "123456789012345678",
+    licenseKeyLabel: "ou chave de licença",
+    licenseKeyPlaceholder: "GOAT-XXXX-XXXX-XXXX",
+    searchIdle: "Buscar",
+    searchBusy: "Buscando...",
+    noResults: "Nenhum cliente encontrado com esses dados.",
+    licensesHeading: "Licenças",
+    statusLabel: "Status",
+    planLabel: "Plano",
+    expiresLabel: "Expira em",
+    setActive: "Ativar",
+    setSuspended: "Suspender",
+    setRevoked: "Revogar",
+    serversHeading: "Servidores",
+    serverIpLabel: "IP atual observado",
+    authStatusLabel: "Status de autenticação",
+    authorizedIpsLabel: "IPs autorizados (allowlist de segurança)",
+    authorizedIpsPlaceholder: "Um IP por linha - deixe vazio pra não travar por IP",
+    authorizedIpsHint:
+      "Se essa lista não tiver o IP atual do servidor, todo heartbeat/telemetria cai em 403 (ex: cliente trocou de VPS).",
+    noAuthorizedIps: "Sem restrição de IP configurada.",
+    saveIps: "Salvar IPs",
+    savingIps: "Salvando...",
+    clearIps: "Limpar (desbloquear IP)",
+  },
   catalog: {
     heading: "Catálogo",
     refresh: "Atualizar",
@@ -373,6 +442,13 @@ const pt: Copy = {
     createCouponError: "Erro ao criar cupom.",
     confirmDeactivateCoupon: (code) => `Desativar o cupom '${code}'? Ele para de funcionar imediatamente.`,
     deactivateCouponError: "Erro ao desativar cupom.",
+    provideDiscordIdOrKey: "Informe o Discord ID ou a chave de licença.",
+    searchLicenseError: "Erro ao buscar cliente.",
+    ipsUpdated: "IPs autorizados atualizados.",
+    updateIpsError: "Erro ao atualizar IPs autorizados.",
+    statusUpdated: (status) => `Licença atualizada para ${status}.`,
+    updateStatusError: "Erro ao atualizar status da licença.",
+    confirmStatusChange: (key, status) => `Alterar a licença '${key}' para '${status}'?`,
   },
 };
 
@@ -475,6 +551,36 @@ const en: Copy = {
     expiresSuffix: (date) => ` · expires ${date}`,
     deactivate: "Deactivate",
   },
+  licenses: {
+    heading: "License management",
+    description:
+      "Search by Discord ID or license key to see a customer's licenses and servers — useful for unlocking an IP after a VPS move, suspending a license for abuse, or reactivating one.",
+    discordIdLabel: "Customer's Discord ID",
+    discordIdPlaceholder: "123456789012345678",
+    licenseKeyLabel: "or license key",
+    licenseKeyPlaceholder: "GOAT-XXXX-XXXX-XXXX",
+    searchIdle: "Search",
+    searchBusy: "Searching...",
+    noResults: "No customer found with that info.",
+    licensesHeading: "Licenses",
+    statusLabel: "Status",
+    planLabel: "Plan",
+    expiresLabel: "Expires on",
+    setActive: "Activate",
+    setSuspended: "Suspend",
+    setRevoked: "Revoke",
+    serversHeading: "Servers",
+    serverIpLabel: "Current observed IP",
+    authStatusLabel: "Auth status",
+    authorizedIpsLabel: "Authorized IPs (security allowlist)",
+    authorizedIpsPlaceholder: "One IP per line - leave empty to not lock by IP",
+    authorizedIpsHint:
+      "If this list doesn't include the server's current IP, every heartbeat/telemetry call gets a 403 (e.g. customer moved VPS).",
+    noAuthorizedIps: "No IP restriction configured.",
+    saveIps: "Save IPs",
+    savingIps: "Saving...",
+    clearIps: "Clear (unlock IP)",
+  },
   catalog: {
     heading: "Catalog",
     refresh: "Refresh",
@@ -550,6 +656,13 @@ const en: Copy = {
     createCouponError: "Error creating coupon.",
     confirmDeactivateCoupon: (code) => `Deactivate coupon '${code}'? It stops working immediately.`,
     deactivateCouponError: "Error deactivating coupon.",
+    provideDiscordIdOrKey: "Enter the Discord ID or the license key.",
+    searchLicenseError: "Error searching for customer.",
+    ipsUpdated: "Authorized IPs updated.",
+    updateIpsError: "Error updating authorized IPs.",
+    statusUpdated: (status) => `License updated to ${status}.`,
+    updateStatusError: "Error updating license status.",
+    confirmStatusChange: (key, status) => `Change license '${key}' to '${status}'?`,
   },
 };
 
@@ -642,6 +755,15 @@ export default function CeoPage() {
   const [couponForm, setCouponForm] = useState(emptyCouponForm);
   const [creatingCoupon, setCreatingCoupon] = useState(false);
   const [busyCouponCode, setBusyCouponCode] = useState<string | null>(null);
+
+  const [licenseSearchDiscordId, setLicenseSearchDiscordId] = useState("");
+  const [licenseSearchKey, setLicenseSearchKey] = useState("");
+  const [searchingLicense, setSearchingLicense] = useState(false);
+  const [licenseResult, setLicenseResult] = useState<AdminLicenseSearchResult | null>(null);
+  const [licenseSearched, setLicenseSearched] = useState(false);
+  const [ipEditsByServer, setIpEditsByServer] = useState<Record<string, string>>({});
+  const [busyServerId, setBusyServerId] = useState<string | null>(null);
+  const [busyLicenseId, setBusyLicenseId] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = t.tabTitle;
@@ -1017,6 +1139,87 @@ export default function CeoPage() {
     }
   };
 
+  const handleSearchLicense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsg(null);
+    if (!licenseSearchDiscordId.trim() && !licenseSearchKey.trim()) {
+      setMsg({ type: "error", text: t.messages.provideDiscordIdOrKey });
+      return;
+    }
+    setSearchingLicense(true);
+    setLicenseSearched(false);
+    try {
+      const result = await api.admin.licenses.search({
+        discordId: licenseSearchDiscordId.trim() || undefined,
+        licenseKey: licenseSearchKey.trim() || undefined,
+      });
+      setLicenseResult(result);
+      setIpEditsByServer(
+        Object.fromEntries(
+          result.servers.map((s) => [s._id, (s.security.authorizedIps || []).join("\n")]),
+        ),
+      );
+    } catch (err: any) {
+      setLicenseResult(null);
+      setMsg({ type: "error", text: err.message || t.messages.searchLicenseError });
+    } finally {
+      setSearchingLicense(false);
+      setLicenseSearched(true);
+    }
+  };
+
+  const handleSaveServerIps = async (serverId: string, raw: string) => {
+    const ips = raw
+      .split("\n")
+      .map((ip) => ip.trim())
+      .filter(Boolean);
+    setBusyServerId(serverId);
+    setMsg(null);
+    try {
+      const res = await api.admin.licenses.resetServerIps(serverId, ips);
+      setMsg({ type: "success", text: t.messages.ipsUpdated });
+      setLicenseResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              servers: prev.servers.map((s) => (s._id === serverId ? { ...s, ...res.server } : s)),
+            }
+          : prev,
+      );
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.updateIpsError });
+    } finally {
+      setBusyServerId(null);
+    }
+  };
+
+  const handleChangeLicenseStatus = async (
+    license: { _id: string; key: string },
+    status: "active" | "suspended" | "revoked",
+  ) => {
+    if (!window.confirm(t.messages.confirmStatusChange(license.key, status))) return;
+    setBusyLicenseId(license._id);
+    setMsg(null);
+    try {
+      await api.admin.licenses.updateStatus(license._id, status);
+      setMsg({ type: "success", text: t.messages.statusUpdated(status) });
+      setLicenseResult((prev) =>
+        prev
+          ? {
+              ...prev,
+              licenses: prev.licenses.map((l) =>
+                l._id === license._id ? { ...l, status } : l,
+              ),
+            }
+          : prev,
+      );
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.updateStatusError });
+    } finally {
+      setBusyLicenseId(null);
+    }
+  };
+
   if (checking) {
     return (
       <main className="relative min-h-screen bg-background text-foreground">
@@ -1354,6 +1557,191 @@ export default function CeoPage() {
                   </MriButton>
                 </div>
               </MriCard>
+            )}
+          </motion.form>
+
+          {/* Gerenciamento de licenças */}
+          <motion.form
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onSubmit={handleSearchLicense}
+            className="mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+          >
+            <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <KeyRound className="h-4 w-4" /> {t.licenses.heading}
+            </h2>
+            <p className="mt-1 text-[11.5px] text-muted-foreground">{t.licenses.description}</p>
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label={t.licenses.discordIdLabel}>
+                <MriInput
+                  value={licenseSearchDiscordId}
+                  onChange={(e) => setLicenseSearchDiscordId(e.target.value)}
+                  className={inputClass}
+                  placeholder={t.licenses.discordIdPlaceholder}
+                />
+              </Field>
+              <Field label={t.licenses.licenseKeyLabel}>
+                <MriInput
+                  value={licenseSearchKey}
+                  onChange={(e) => setLicenseSearchKey(e.target.value)}
+                  className={`${inputClass} font-mono`}
+                  placeholder={t.licenses.licenseKeyPlaceholder}
+                />
+              </Field>
+            </div>
+            <MriButton
+              variant="outline"
+              type="submit"
+              disabled={searchingLicense}
+              className="mt-6 rounded-xl bg-background px-5 py-3 text-[13px] transition-transform hover:scale-[1.02] hover:bg-background hover:text-foreground active:scale-[0.98]"
+            >
+              <Search className="h-3.5 w-3.5" />{" "}
+              {searchingLicense ? t.licenses.searchBusy : t.licenses.searchIdle}
+            </MriButton>
+
+            {licenseSearched && !licenseResult && (
+              <p className="mt-4 text-[12px] text-muted-foreground">{t.licenses.noResults}</p>
+            )}
+
+            {licenseResult && (
+              <div className="mt-6 space-y-5 border-t border-border/40 pt-5">
+                <div>
+                  <h3 className="text-[13px] font-semibold text-foreground">
+                    {t.licenses.licensesHeading}
+                  </h3>
+                  <div className="mt-3 space-y-2">
+                    {licenseResult.licenses.map((l) => (
+                      <MriCard
+                        key={l._id}
+                        className="flex flex-wrap items-center justify-between gap-3 border-border/40 bg-background/40 px-4 py-3"
+                      >
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[12.5px] font-semibold text-foreground">
+                              {l.key}
+                            </span>
+                            <span
+                              className={`rounded px-1.5 py-0.5 text-[10px] ${
+                                l.status === "active"
+                                  ? "bg-emerald-500/10 text-emerald-400"
+                                  : "bg-red-500/10 text-red-400"
+                              }`}
+                            >
+                              {l.status}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-[11.5px] text-muted-foreground">
+                            {t.licenses.planLabel}: {l.plan || "—"} · {t.licenses.expiresLabel}:{" "}
+                            {formatDate(l.expiresAt, lang)}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {l.status !== "active" && (
+                            <MriButton
+                              variant="outline"
+                              size="sm"
+                              disabled={busyLicenseId === l._id}
+                              onClick={() => handleChangeLicenseStatus(l, "active")}
+                              className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
+                            >
+                              {t.licenses.setActive}
+                            </MriButton>
+                          )}
+                          {l.status !== "suspended" && (
+                            <MriButton
+                              variant="outline"
+                              size="sm"
+                              disabled={busyLicenseId === l._id}
+                              onClick={() => handleChangeLicenseStatus(l, "suspended")}
+                              className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
+                            >
+                              {t.licenses.setSuspended}
+                            </MriButton>
+                          )}
+                          {l.status !== "revoked" && (
+                            <MriButton
+                              variant="danger-outline"
+                              size="sm"
+                              disabled={busyLicenseId === l._id}
+                              onClick={() => handleChangeLicenseStatus(l, "revoked")}
+                              className="rounded-lg border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
+                            >
+                              <ShieldAlert className="h-3.5 w-3.5" /> {t.licenses.setRevoked}
+                            </MriButton>
+                          )}
+                        </div>
+                      </MriCard>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-[13px] font-semibold text-foreground">
+                    {t.licenses.serversHeading}
+                  </h3>
+                  <div className="mt-3 space-y-3">
+                    {licenseResult.servers.map((s) => (
+                      <MriCard key={s._id} className="border-border/40 bg-background/40 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <span className="text-[13px] font-semibold text-foreground">{s.name}</span>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">
+                              {t.licenses.serverIpLabel}: <span className="font-mono">{s.ip}</span>
+                              {" · "}
+                              {t.licenses.authStatusLabel}:{" "}
+                              <span
+                                className={
+                                  s.authStatus === "AUTHORIZED"
+                                    ? "text-emerald-400"
+                                    : "text-red-400"
+                                }
+                              >
+                                {s.authStatus}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <Field label={t.licenses.authorizedIpsLabel}>
+                            <textarea
+                              value={ipEditsByServer[s._id] ?? ""}
+                              onChange={(e) =>
+                                setIpEditsByServer((prev) => ({ ...prev, [s._id]: e.target.value }))
+                              }
+                              className={`${inputClass} min-h-[70px] font-mono`}
+                              placeholder={t.licenses.authorizedIpsPlaceholder}
+                            />
+                          </Field>
+                          <p className="mt-1.5 text-[10.5px] text-muted-foreground/70">
+                            {t.licenses.authorizedIpsHint}
+                          </p>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <MriButton
+                            variant="outline"
+                            size="sm"
+                            disabled={busyServerId === s._id}
+                            onClick={() => handleSaveServerIps(s._id, ipEditsByServer[s._id] ?? "")}
+                            className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
+                          >
+                            <Save className="h-3.5 w-3.5" />{" "}
+                            {busyServerId === s._id ? t.licenses.savingIps : t.licenses.saveIps}
+                          </MriButton>
+                          <MriButton
+                            variant="ghost"
+                            size="sm"
+                            disabled={busyServerId === s._id}
+                            onClick={() => handleSaveServerIps(s._id, "")}
+                            className="rounded-lg"
+                          >
+                            {t.licenses.clearIps}
+                          </MriButton>
+                        </div>
+                      </MriCard>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
           </motion.form>
 

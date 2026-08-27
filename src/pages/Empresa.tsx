@@ -29,9 +29,9 @@ type Copy = {
 const pt: Copy = {
   tabTitle: "Empresa — Goat Network",
   eyebrowEmpresa: "Empresa",
-  heroTitle: "Duas pessoas que não se conheciam. Uma aposta que virou a Goat Network.",
+  heroTitle: "Uma aposta pessoal que virou a Goat Network.",
   heroBody:
-    "A Goat Network nasceu de duas pessoas que nunca tinham se falado antes — mas decidiram acreditar uma na outra e investir tempo, trabalho e reputação no mesmo projeto.",
+    "A Goat Network nasceu de uma decisão simples: investir tempo, trabalho e reputação num projeto que valesse a pena de verdade para a comunidade FiveM.",
   reasonEyebrow: "O motivo",
   reasonTitle: "Uma inconformidade com o preço do mercado",
   reasonBody:
@@ -51,9 +51,9 @@ const pt: Copy = {
 const en: Copy = {
   tabTitle: "Company — Goat Network",
   eyebrowEmpresa: "Company",
-  heroTitle: "Two people who'd never met. A bet that became Goat Network.",
+  heroTitle: "A personal bet that became Goat Network.",
   heroBody:
-    "Goat Network started with two people who had never spoken before — but decided to trust each other and put time, work, and reputation into the same project.",
+    "Goat Network started with a simple decision: put time, work, and reputation into a project truly worth building for the FiveM community.",
   reasonEyebrow: "The reason",
   reasonTitle: "A disagreement with market pricing",
   reasonBody:
@@ -77,13 +77,6 @@ const FALLBACK_FOUNDERS: FounderItem[] = [
     role: "Founder, Goat Network",
     avatarUrl: null,
     profileUrl: "https://discord.com/users/1525402934815232010",
-  },
-  {
-    discordId: "1325846495626268693",
-    name: "Nexus",
-    role: "Founder, Goat Network",
-    avatarUrl: null,
-    profileUrl: "https://discord.com/users/1325846495626268693",
   },
 ];
 
@@ -162,7 +155,13 @@ export default function Empresa() {
             </h2>
           </FadeUp>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-2">
+          <div
+            className={
+              founders.length > 1
+                ? "mt-12 grid gap-6 sm:grid-cols-2"
+                : "mt-12 flex justify-center"
+            }
+          >
             {founders.map((f, i) => (
               <FadeUp key={f.discordId} delay={i * 0.1}>
                 <a
