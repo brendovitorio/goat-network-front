@@ -19,8 +19,10 @@ import {
   KeyRound,
   Search,
   ShieldAlert,
+  Users,
 } from "lucide-react";
 import { Nav } from "@/components/goatlanding/Nav";
+import { MriTabs } from "@/components/ui/MriTabs";
 import {
   api,
   PlanItem,
@@ -41,6 +43,11 @@ type Copy = {
   checkingAccess: string;
   pageTitle: string;
   pageSubtitle: string;
+  tabs: {
+    catalog: string;
+    clients: string;
+    coupons: string;
+  };
   newProduct: {
     heading: string;
     description: string;
@@ -245,6 +252,11 @@ const pt: Copy = {
   checkingAccess: "Verificando acesso...",
   pageTitle: "Área CEO",
   pageSubtitle: "Produtos e planos conectados direto com a Stripe.",
+  tabs: {
+    catalog: "Catálogo",
+    clients: "Clientes",
+    coupons: "Cupons",
+  },
   newProduct: {
     heading: "Novo produto (resource)",
     description:
@@ -457,6 +469,11 @@ const en: Copy = {
   checkingAccess: "Checking access...",
   pageTitle: "CEO Area",
   pageSubtitle: "Products and plans connected directly to Stripe.",
+  tabs: {
+    catalog: "Catalog",
+    clients: "Clients",
+    coupons: "Coupons",
+  },
   newProduct: {
     heading: "New product (resource)",
     description:
@@ -710,6 +727,7 @@ export default function CeoPage() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [activeTab, setActiveTab] = useState<"catalog" | "clients" | "coupons">("catalog");
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [plans, setPlans] = useState<PlanItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1260,12 +1278,23 @@ export default function CeoPage() {
             </div>
           )}
 
+          <MriTabs
+            className="mt-8"
+            tabs={[
+              { id: "catalog", label: t.tabs.catalog, icon: Package },
+              { id: "clients", label: t.tabs.clients, icon: Users },
+              { id: "coupons", label: t.tabs.coupons, icon: Ticket },
+            ]}
+            activeTab={activeTab}
+            onChange={(id) => setActiveTab(id as typeof activeTab)}
+          />
+
           {/* Criar novo produto */}
           <motion.form
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleCreateProduct}
-            className="mt-8 rounded-2xl border border-border/50 bg-card/40 p-8"
+            className={activeTab === "catalog" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Package className="h-4 w-4" /> {t.newProduct.heading}
@@ -1342,7 +1371,7 @@ export default function CeoPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleCreatePlan}
-            className="mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+            className={activeTab === "catalog" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Plus className="h-4 w-4" /> {t.newPlan.heading}
@@ -1488,7 +1517,7 @@ export default function CeoPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleCreateGrant}
-            className="mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+            className={activeTab === "clients" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Gift className="h-4 w-4" /> {t.grants.heading}
@@ -1565,7 +1594,7 @@ export default function CeoPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleSearchLicense}
-            className="mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+            className={activeTab === "clients" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <KeyRound className="h-4 w-4" /> {t.licenses.heading}
@@ -1750,7 +1779,7 @@ export default function CeoPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleCreateCoupon}
-            className="mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+            className={activeTab === "coupons" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Ticket className="h-4 w-4" /> {t.coupons.heading}
@@ -1868,7 +1897,7 @@ export default function CeoPage() {
             </MriButton>
           </motion.form>
 
-          {coupons.length > 0 && (
+          {coupons.length > 0 && activeTab === "coupons" && (
             <MriCard className="mt-6 border-border/50 bg-card/40 p-8">
               <h3 className="text-[14px] font-semibold text-foreground">{t.coupons.listHeading}</h3>
               <div className="mt-4 space-y-2">
@@ -1924,6 +1953,7 @@ export default function CeoPage() {
           )}
 
           {/* Lista de produtos + planos */}
+          <div className={activeTab === "catalog" ? "" : "hidden"}>
           <div className="mt-10 flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">{t.catalog.heading}</h2>
             <button
@@ -2212,6 +2242,7 @@ export default function CeoPage() {
                 </div>
               </div>
             ))}
+          </div>
           </div>
         </div>
       </div>
