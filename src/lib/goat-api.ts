@@ -704,6 +704,12 @@ export const api = {
           body: JSON.stringify({ status }),
         });
       },
+      deleteServer: (serverId: string): Promise<{ success: boolean }> => {
+        return safeFetchJson(`${BACKEND_URL}/admin/licenses/servers/${serverId}`, {
+          method: "DELETE",
+          headers: getHeaders(),
+        });
+      },
     },
   },
 

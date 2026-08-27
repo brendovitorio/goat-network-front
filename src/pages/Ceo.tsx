@@ -165,6 +165,8 @@ type Copy = {
     saveIps: string;
     savingIps: string;
     clearIps: string;
+    deleteServer: string;
+    deletingServer: string;
   };
   catalog: {
     heading: string;
@@ -244,6 +246,9 @@ type Copy = {
     statusUpdated: (status: string) => string;
     updateStatusError: string;
     confirmStatusChange: (key: string, status: string) => string;
+    confirmDeleteServer: (name: string) => string;
+    serverDeleted: (name: string) => string;
+    deleteServerError: string;
   };
 };
 
@@ -380,6 +385,8 @@ const pt: Copy = {
     saveIps: "Salvar IPs",
     savingIps: "Salvando...",
     clearIps: "Limpar (desbloquear IP)",
+    deleteServer: "Excluir produto",
+    deletingServer: "Excluindo...",
   },
   catalog: {
     heading: "Catálogo",
@@ -461,6 +468,10 @@ const pt: Copy = {
     statusUpdated: (status) => `Licença atualizada para ${status}.`,
     updateStatusError: "Erro ao atualizar status da licença.",
     confirmStatusChange: (key, status) => `Alterar a licença '${key}' para '${status}'?`,
+    confirmDeleteServer: (name) =>
+      `Excluir o produto '${name}'? Ele some do dashboard do cliente e a licença vinculada é revogada. Essa ação não pode ser desfeita.`,
+    serverDeleted: (name) => `Produto '${name}' excluído do dashboard do cliente.`,
+    deleteServerError: "Erro ao excluir o produto do cliente.",
   },
 };
 
@@ -597,6 +608,8 @@ const en: Copy = {
     saveIps: "Save IPs",
     savingIps: "Saving...",
     clearIps: "Clear (unlock IP)",
+    deleteServer: "Delete product",
+    deletingServer: "Deleting...",
   },
   catalog: {
     heading: "Catalog",
@@ -680,6 +693,10 @@ const en: Copy = {
     statusUpdated: (status) => `License updated to ${status}.`,
     updateStatusError: "Error updating license status.",
     confirmStatusChange: (key, status) => `Change license '${key}' to '${status}'?`,
+    confirmDeleteServer: (name) =>
+      `Delete product '${name}'? It disappears from the customer's dashboard and the linked license is revoked. This cannot be undone.`,
+    serverDeleted: (name) => `Product '${name}' deleted from the customer's dashboard.`,
+    deleteServerError: "Error deleting the customer's product.",
   },
 };
 
@@ -782,6 +799,7 @@ export default function CeoPage() {
   const [ipEditsByServer, setIpEditsByServer] = useState<Record<string, string>>({});
   const [busyServerId, setBusyServerId] = useState<string | null>(null);
   const [busyLicenseId, setBusyLicenseId] = useState<string | null>(null);
+  const [busyDeleteServerId, setBusyDeleteServerId] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = t.tabTitle;
@@ -1235,6 +1253,23 @@ export default function CeoPage() {
       setMsg({ type: "error", text: err.message || t.messages.updateStatusError });
     } finally {
       setBusyLicenseId(null);
+    }
+  };
+
+  const handleDeleteServer = async (server: { _id: string; name: string }) => {
+    if (!window.confirm(t.messages.confirmDeleteServer(server.name))) return;
+    setBusyDeleteServerId(server._id);
+    setMsg(null);
+    try {
+      await api.admin.licenses.deleteServer(server._id);
+      setMsg({ type: "success", text: t.messages.serverDeleted(server.name) });
+      setLicenseResult((prev) =>
+        prev ? { ...prev, servers: prev.servers.filter((s) => s._id !== server._id) } : prev,
+      );
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.deleteServerError });
+    } finally {
+      setBusyDeleteServerId(null);
     }
   };
 
@@ -1764,6 +1799,16 @@ export default function CeoPage() {
                             className="rounded-lg"
                           >
                             {t.licenses.clearIps}
+                          </MriButton>
+                          <MriButton
+                            variant="danger-outline"
+                            size="sm"
+                            disabled={busyDeleteServerId === s._id}
+                            onClick={() => handleDeleteServer(s)}
+                            className="ml-auto rounded-lg border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />{" "}
+                            {busyDeleteServerId === s._id ? t.licenses.deletingServer : t.licenses.deleteServer}
                           </MriButton>
                         </div>
                       </MriCard>
