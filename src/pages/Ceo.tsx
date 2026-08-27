@@ -469,8 +469,8 @@ const pt: Copy = {
     updateStatusError: "Erro ao atualizar status da licença.",
     confirmStatusChange: (key, status) => `Alterar a licença '${key}' para '${status}'?`,
     confirmDeleteServer: (name) =>
-      `Excluir o produto '${name}'? Ele some do dashboard do cliente e a licença vinculada é revogada. Essa ação não pode ser desfeita.`,
-    serverDeleted: (name) => `Produto '${name}' excluído do dashboard do cliente.`,
+      `Excluir o produto '${name}'? Ele some do dashboard do cliente e a licença vinculada é apagada permanentemente (a chave deixa de existir). Essa ação não pode ser desfeita.`,
+    serverDeleted: (name) => `Produto '${name}' e a licença vinculada foram excluídos.`,
     deleteServerError: "Erro ao excluir o produto do cliente.",
   },
 };
@@ -694,8 +694,8 @@ const en: Copy = {
     updateStatusError: "Error updating license status.",
     confirmStatusChange: (key, status) => `Change license '${key}' to '${status}'?`,
     confirmDeleteServer: (name) =>
-      `Delete product '${name}'? It disappears from the customer's dashboard and the linked license is revoked. This cannot be undone.`,
-    serverDeleted: (name) => `Product '${name}' deleted from the customer's dashboard.`,
+      `Delete product '${name}'? It disappears from the customer's dashboard and the linked license is permanently deleted (the key stops existing). This cannot be undone.`,
+    serverDeleted: (name) => `Product '${name}' and its linked license were deleted.`,
     deleteServerError: "Error deleting the customer's product.",
   },
 };
@@ -1256,7 +1256,7 @@ export default function CeoPage() {
     }
   };
 
-  const handleDeleteServer = async (server: { _id: string; name: string }) => {
+  const handleDeleteServer = async (server: { _id: string; name: string; licenseId: string }) => {
     if (!window.confirm(t.messages.confirmDeleteServer(server.name))) return;
     setBusyDeleteServerId(server._id);
     setMsg(null);
@@ -1264,7 +1264,13 @@ export default function CeoPage() {
       await api.admin.licenses.deleteServer(server._id);
       setMsg({ type: "success", text: t.messages.serverDeleted(server.name) });
       setLicenseResult((prev) =>
-        prev ? { ...prev, servers: prev.servers.filter((s) => s._id !== server._id) } : prev,
+        prev
+          ? {
+              ...prev,
+              servers: prev.servers.filter((s) => s._id !== server._id),
+              licenses: prev.licenses.filter((l) => l._id !== server.licenseId),
+            }
+          : prev,
       );
     } catch (err: any) {
       setMsg({ type: "error", text: err.message || t.messages.deleteServerError });
