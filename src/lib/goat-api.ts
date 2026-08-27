@@ -1,7 +1,7 @@
 import { getApiLang } from "@/i18n/LanguageContext";
 
 export const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || "https://api.goatnetwork.dev/api"
+  import.meta.env.VITE_BACKEND_URL || "https://api.goatnetwork.dev/api";
 
 export type ServerItem = {
   _id: string;
