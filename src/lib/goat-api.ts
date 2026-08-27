@@ -72,6 +72,33 @@ export type FounderItem = {
 export const productLogoUrl = (product: Pick<ProductItem, "logoUrl">): string =>
   product.logoUrl || DEFAULT_PRODUCT_LOGO;
 
+export type AdminLicenseItem = {
+  _id: string;
+  key: string;
+  plan?: string;
+  status: "active" | "suspended" | "expired" | "revoked";
+  boundIp?: string;
+  expiresAt: string;
+  createdAt: string;
+};
+
+export type AdminLicenseServerItem = {
+  _id: string;
+  licenseId: string;
+  name: string;
+  ip: string;
+  status: string;
+  authStatus: string;
+  lastHeartbeat?: string;
+  security: { authorizedIps: string[] };
+};
+
+export type AdminLicenseSearchResult = {
+  user: { discordId: string; username: string | null };
+  licenses: AdminLicenseItem[];
+  servers: AdminLicenseServerItem[];
+};
+
 export type PlanItem = {
   _id?: string;
   productSlug: string;
@@ -646,6 +673,36 @@ export const api = {
             headers: getHeaders(),
           },
         );
+      },
+    },
+    licenses: {
+      search: (query: { discordId?: string; licenseKey?: string }): Promise<AdminLicenseSearchResult> => {
+        const params = new URLSearchParams();
+        if (query.discordId) params.set("discordId", query.discordId.trim());
+        if (query.licenseKey) params.set("licenseKey", query.licenseKey.trim());
+        return safeFetchJson(`${BACKEND_URL}/admin/licenses/search?${params.toString()}`, {
+          headers: getHeaders(),
+        });
+      },
+      resetServerIps: (
+        serverId: string,
+        authorizedIps: string[] = [],
+      ): Promise<{ success: boolean; server: AdminLicenseServerItem }> => {
+        return safeFetchJson(`${BACKEND_URL}/admin/licenses/servers/${serverId}/reset-ip`, {
+          method: "POST",
+          headers: getHeaders(),
+          body: JSON.stringify({ authorizedIps }),
+        });
+      },
+      updateStatus: (
+        licenseId: string,
+        status: AdminLicenseItem["status"],
+      ): Promise<{ success: boolean; license: { _id: string; status: string } }> => {
+        return safeFetchJson(`${BACKEND_URL}/admin/licenses/${licenseId}/status`, {
+          method: "POST",
+          headers: getHeaders(),
+          body: JSON.stringify({ status }),
+        });
       },
     },
   },

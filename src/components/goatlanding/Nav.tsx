@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MriButton } from "@/components/ui/MriButton";
 
-const DISCORD_URL = "https://discord.gg/VpHaMPpEHZ";
+const DISCORD_URL = "https://discord.gg/goatnetworkgg";
 
 type Copy = {
   links: { label: string; href: string; dropdown: boolean }[];

@@ -319,7 +319,7 @@ function SidebarContent({
           slug="suporte"
           small
           collapsed={collapsed}
-          href="https://discord.gg/VpHaMPpEHZ"
+          href="https://discord.gg/goatnetworkgg"
         />
 
         <button
