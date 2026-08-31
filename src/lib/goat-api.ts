@@ -320,8 +320,34 @@ export const resolveLicenseForServer = (
   );
 };
 
+// Retries só em falha de rede (fetch rejeitando - DNS, conexão recusada,
+// timeout, cold-start do backend no Render) - nunca em resposta HTTP que
+// chegou de verdade (401/403/500 não se resolvem tentando de novo).
+const RETRY_DELAYS_MS = [600, 1500];
+
+const fetchComRetry = async (url: string, options?: RequestInit) => {
+  for (let tentativa = 0; ; tentativa++) {
+    try {
+      return await fetch(url, options);
+    } catch (err) {
+      if (tentativa >= RETRY_DELAYS_MS.length) throw err;
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[tentativa]));
+    }
+  }
+};
+
 const safeFetchJson = async (url: string, options?: RequestInit) => {
-  const res = await fetch(url, options);
+  let res: Response;
+  try {
+    res = await fetchComRetry(url, options);
+  } catch {
+    const lang = getApiLang();
+    throw new Error(
+      lang === "en"
+        ? "Could not reach the API server. Check your connection and try again."
+        : "Não foi possível conectar ao servidor da API. Verifique sua conexão e tente novamente.",
+    );
+  }
   const text = await res.text();
   let data: any = {};
   try {
