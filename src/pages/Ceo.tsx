@@ -428,7 +428,7 @@ const pt: Copy = {
   messages: {
     loadDataError: "Erro ao carregar dados.",
     fillProductName: "Preencha o nome do produto.",
-    logoTooBig: "A logo precisa ter até 1MB.",
+    logoTooBig: "A logo precisa ter até 5MB.",
     productCreated: "Produto criado.",
     createProductError: "Erro ao criar produto.",
     createPlanBeforeProduct: "Crie um produto antes de adicionar planos.",
@@ -653,7 +653,7 @@ const en: Copy = {
   messages: {
     loadDataError: "Error loading data.",
     fillProductName: "Fill in the product name.",
-    logoTooBig: "The logo needs to be under 1MB.",
+    logoTooBig: "The logo needs to be under 5MB.",
     productCreated: "Product created.",
     createProductError: "Error creating product.",
     createPlanBeforeProduct: "Create a product before adding plans.",
@@ -859,6 +859,45 @@ export default function CeoPage() {
       reader.readAsDataURL(file);
     });
 
+  // Redimensiona/comprime a imagem no navegador antes de virar base64 - sem
+  // isso, uma foto de câmera (vários MB) virava um payload maior ainda em
+  // base64 (+33%) e estourava o limite de corpo de requisição do proxy na
+  // frente do backend (Render/Cloudflare), que devolve 413 sem headers de
+  // CORS - o navegador então mostra isso como um bloqueio de CORS confuso.
+  // Ícone de produto não precisa de mais que ~256px, então sempre cabe.
+  const compressImageToBase64 = (file: File, maxDimension = 256, quality = 0.85): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Não foi possível processar a imagem"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // PNG/GIF preservam transparência - JPEG não, mas é bem mais leve
+        // pra fotos comuns (a maioria dos logos enviados).
+        const preservaTransparencia = file.type === "image/png" || file.type === "image/gif";
+        resolve(canvas.toDataURL(preservaTransparencia ? "image/png" : "image/jpeg", quality));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Não foi possível ler a imagem"));
+      };
+      img.src = url;
+    });
+
+  // SVG é texto vetorial e já é pequeno - rasterizar perderia a nitidez à
+  // toa, então passa direto. O resto (PNG/JPG/WEBP/GIF) sempre é comprimido.
+  const prepareLogoBase64 = (file: File): Promise<string> =>
+    file.type === "image/svg+xml" ? readFileAsBase64(file) : compressImageToBase64(file);
+
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg(null);
@@ -866,13 +905,13 @@ export default function CeoPage() {
       setMsg({ type: "error", text: t.messages.fillProductName });
       return;
     }
-    if (productLogoFile && productLogoFile.size > 1024 * 1024) {
+    if (productLogoFile && productLogoFile.size > 5 * 1024 * 1024) {
       setMsg({ type: "error", text: t.messages.logoTooBig });
       return;
     }
     setCreatingProduct(true);
     try {
-      const logoBase64 = productLogoFile ? await readFileAsBase64(productLogoFile) : undefined;
+      const logoBase64 = productLogoFile ? await prepareLogoBase64(productLogoFile) : undefined;
       await api.admin.products.createProduct({
         name: productForm.name,
         description: productForm.description,
