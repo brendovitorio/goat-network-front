@@ -16,7 +16,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const socketUrl = BACKEND_URL.replace("/api", "");
+    // new URL(...).origin em vez de BACKEND_URL.replace("/api", "") - o
+    // replace por string pegava a primeira ocorrencia de "/api", que caia
+    // no "//api" de "https://api.goatnetwork.dev" (o subdominio comeca com
+    // "api"), corrompendo a URL pra "https:/.goatnetwork.dev/api" e fazendo
+    // o socket.io tentar conectar em host "https" literal.
+    const socketUrl = new URL(BACKEND_URL).origin;
 
     const newSocket = io(socketUrl, {
       transports: ["websocket", "polling"],
