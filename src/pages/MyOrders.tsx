@@ -26,6 +26,8 @@ type Copy = {
   quotedLabel: string;
   repliesHeading: string;
   noReplies: string;
+  fromTeam: string;
+  fromYou: string;
 };
 
 const pt: Copy = {
@@ -59,6 +61,8 @@ const pt: Copy = {
   quotedLabel: "Valor proposto",
   repliesHeading: "Respostas",
   noReplies: "Ainda sem resposta — assim que analisarmos, você recebe um e-mail.",
+  fromTeam: "Goat Network",
+  fromYou: "Você",
 };
 
 const en: Copy = {
@@ -92,6 +96,8 @@ const en: Copy = {
   quotedLabel: "Quoted price",
   repliesHeading: "Replies",
   noReplies: "No reply yet — you'll get an email once we've reviewed it.",
+  fromTeam: "Goat Network",
+  fromYou: "You",
 };
 
 const statusColor: Record<SystemOrderItem["status"], string> = {
@@ -229,7 +235,10 @@ export default function MyOrdersPage() {
                         <div className="mt-2 space-y-2">
                           {order.messages.map((m, idx) => (
                             <div key={idx} className="rounded-lg bg-elevated/60 p-3">
-                              <p className="whitespace-pre-wrap text-[12.5px] text-foreground/90">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                {m.from === "client" ? t.fromYou : t.fromTeam}
+                              </p>
+                              <p className="mt-1 whitespace-pre-wrap text-[12.5px] text-foreground/90">
                                 {m.body}
                               </p>
                               <p className="mt-1 text-[10.5px] text-muted-foreground">

@@ -189,6 +189,9 @@ type Copy = {
     saveNotes: string;
     messagesHeading: string;
     noMessages: string;
+    fromClient: string;
+    fromCeo: string;
+    awaitingReply: string;
     replyLabel: string;
     replyPlaceholder: string;
     sendReply: string;
@@ -455,6 +458,9 @@ const pt: Copy = {
     saveNotes: "Salvar notas",
     messagesHeading: "Histórico de respostas",
     noMessages: "Ainda não respondemos esse cliente.",
+    fromClient: "Cliente",
+    fromCeo: "Você",
+    awaitingReply: "Cliente respondeu — aguardando retorno",
     replyLabel: "Responder por e-mail",
     replyPlaceholder: "Escreva a resposta que vai pro e-mail do cliente...",
     sendReply: "Enviar resposta",
@@ -728,6 +734,9 @@ const en: Copy = {
     saveNotes: "Save notes",
     messagesHeading: "Reply history",
     noMessages: "No reply sent to this customer yet.",
+    fromClient: "Client",
+    fromCeo: "You",
+    awaitingReply: "Client replied — awaiting your response",
     replyLabel: "Reply by email",
     replyPlaceholder: "Write the reply that will be sent to the customer's email...",
     sendReply: "Send reply",
@@ -2405,9 +2414,17 @@ export default function CeoPage() {
                         </div>
 
                         <div className="mt-4 border-t border-border/40 pt-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            {t.orders.messagesHeading}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              {t.orders.messagesHeading}
+                            </p>
+                            {order.messages.length > 0 &&
+                              order.messages[order.messages.length - 1].from === "client" && (
+                                <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10.5px] font-medium text-amber-400">
+                                  {t.orders.awaitingReply}
+                                </span>
+                              )}
+                          </div>
                           {order.messages.length === 0 ? (
                             <p className="mt-2 text-[12px] text-muted-foreground">
                               {t.orders.noMessages}
@@ -2415,8 +2432,18 @@ export default function CeoPage() {
                           ) : (
                             <div className="mt-2 space-y-2">
                               {order.messages.map((m, idx) => (
-                                <div key={idx} className="rounded-lg bg-elevated/60 p-3">
-                                  <p className="whitespace-pre-wrap text-[12.5px] text-foreground/90">
+                                <div
+                                  key={idx}
+                                  className={
+                                    m.from === "client"
+                                      ? "rounded-lg border border-amber-500/20 bg-amber-500/[0.06] p-3"
+                                      : "rounded-lg bg-elevated/60 p-3"
+                                  }
+                                >
+                                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    {m.from === "client" ? t.orders.fromClient : t.orders.fromCeo}
+                                  </p>
+                                  <p className="mt-1 whitespace-pre-wrap text-[12.5px] text-foreground/90">
                                     {m.body}
                                   </p>
                                   <p className="mt-1 text-[10.5px] text-muted-foreground">

@@ -283,7 +283,7 @@ export type SystemOrderItem = {
   quotedPrice?: number;
   quotedCurrency?: string;
   internalNotes?: string;
-  messages: { body: string; sentAt: string }[];
+  messages: { from: "ceo" | "client"; body: string; sentAt: string }[];
   createdAt: string;
   updatedAt: string;
 };
