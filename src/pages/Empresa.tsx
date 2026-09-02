@@ -29,17 +29,17 @@ type Copy = {
 const pt: Copy = {
   tabTitle: "Empresa — Goat Network",
   eyebrowEmpresa: "Empresa",
-  heroTitle: "Uma aposta pessoal que virou a Goat Network.",
+  heroTitle: "Uma aposta pessoal que virou um estúdio de software.",
   heroBody:
-    "A Goat Network nasceu de uma decisão simples: investir tempo, trabalho e reputação num projeto que valesse a pena de verdade para a comunidade FiveM.",
+    "A Goat Network nasceu pra proteger servidores FiveM e, com o tempo, virou algo maior: um time que constrói sistemas, apps e sites sob encomenda pra empresas — sem largar o produto que deu origem a tudo isso.",
   reasonEyebrow: "O motivo",
   reasonTitle: "Uma inconformidade com o preço do mercado",
   reasonBody:
-    "A ideia surgiu de uma discordância simples: o valor cobrado pelas grandes soluções pra FiveM não fazia sentido pra algo que, antes de qualquer coisa, deveria existir para ajudar a comunidade a crescer — não para explorá-la.",
+    "Tudo começou com uma discordância simples: o valor cobrado pelas grandes soluções pra FiveM não fazia sentido pra algo que, antes de qualquer coisa, deveria existir para ajudar a comunidade a crescer — não para explorá-la. O mesmo princípio guia cada sistema que construímos sob encomenda hoje.",
   goalEyebrow: "O objetivo",
   goalTitle: "Bater de frente com as grandes. Não em preço, nem em nome.",
   goalBody:
-    "Em qualidade. Não qualidade de design — qualidade de produto de verdade, facilidade real de uso e suporte sério para servidores FiveM de qualquer tamanho.",
+    "Em qualidade. Não qualidade de design — qualidade de produto de verdade, facilidade real de uso e suporte sério, seja pra um servidor FiveM de qualquer tamanho ou pro sistema que sua empresa precisa pra operar melhor.",
   foundationEyebrow: "Fundação",
   foundationTitle: "O projeto nasceu em 10 de agosto de 2026",
   ctaTitle: "Acompanhe de perto, converse com quem constrói.",
@@ -51,17 +51,17 @@ const pt: Copy = {
 const en: Copy = {
   tabTitle: "Company — Goat Network",
   eyebrowEmpresa: "Company",
-  heroTitle: "A personal bet that became Goat Network.",
+  heroTitle: "A personal bet that became a software studio.",
   heroBody:
-    "Goat Network started with a simple decision: put time, work, and reputation into a project truly worth building for the FiveM community.",
+    "Goat Network started out protecting FiveM servers and, over time, grew into something bigger: a team that builds custom systems, apps and sites for businesses — without letting go of the product that started it all.",
   reasonEyebrow: "The reason",
   reasonTitle: "A disagreement with market pricing",
   reasonBody:
-    "The idea came from a simple disagreement: what the big FiveM solutions charge didn't make sense for something that, above all, should exist to help the community grow — not to exploit it.",
+    "It all started with a simple disagreement: what the big FiveM solutions charge didn't make sense for something that, above all, should exist to help the community grow — not to exploit it. The same principle guides every custom system we build today.",
   goalEyebrow: "The goal",
   goalTitle: "Go head-to-head with the big players. Not on price, not on name.",
   goalBody:
-    "On quality. Not design quality — real product quality, genuine ease of use, and serious support for FiveM servers of any size.",
+    "On quality. Not design quality — real product quality, genuine ease of use, and serious support, whether it's for a FiveM server of any size or the system your business needs to run better.",
   foundationEyebrow: "Founding",
   foundationTitle: "The project was founded on August 10, 2026",
   ctaTitle: "Follow along closely, talk to the people building it.",
@@ -126,9 +126,7 @@ export default function Empresa() {
             <h2 className="mt-4 text-[24px] leading-[1.2] font-semibold tracking-[-0.02em]">
               {t.reasonTitle}
             </h2>
-            <p className="mt-4 text-[13.5px] leading-[1.7] text-muted-foreground">
-              {t.reasonBody}
-            </p>
+            <p className="mt-4 text-[13.5px] leading-[1.7] text-muted-foreground">{t.reasonBody}</p>
           </FadeLeft>
           <FadeRight className="p-10 md:p-14">
             <span className="font-mono text-[11px] tracking-[0.12em] text-gold uppercase">
@@ -137,9 +135,7 @@ export default function Empresa() {
             <h2 className="mt-4 text-[24px] leading-[1.2] font-semibold tracking-[-0.02em]">
               {t.goalTitle}
             </h2>
-            <p className="mt-4 text-[13.5px] leading-[1.7] text-muted-foreground">
-              {t.goalBody}
-            </p>
+            <p className="mt-4 text-[13.5px] leading-[1.7] text-muted-foreground">{t.goalBody}</p>
           </FadeRight>
         </div>
       </section>
@@ -157,9 +153,7 @@ export default function Empresa() {
 
           <div
             className={
-              founders.length > 1
-                ? "mt-12 grid gap-6 sm:grid-cols-2"
-                : "mt-12 flex justify-center"
+              founders.length > 1 ? "mt-12 grid gap-6 sm:grid-cols-2" : "mt-12 flex justify-center"
             }
           >
             {founders.map((f, i) => (

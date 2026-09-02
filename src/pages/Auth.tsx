@@ -11,6 +11,7 @@ type Copy = {
   pageTitle: string;
   authError: string;
   discordLoginError: string;
+  googleLoginError: string;
   heroLine1: string;
   heroLine2: string;
   heroParagraph: string;
@@ -20,6 +21,8 @@ type Copy = {
   subtitle: string;
   connecting: string;
   continueWithDiscord: string;
+  continueWithGoogle: string;
+  orDivider: string;
   termsPrefix: string;
   termsLinkLabel: string;
   termsMiddle: string;
@@ -29,8 +32,9 @@ type Copy = {
 
 const pt: Copy = {
   pageTitle: "Entrar — Goat Network",
-  authError: "Falha na autenticação via Discord. Tente novamente.",
+  authError: "Falha na autenticação. Tente novamente.",
   discordLoginError: "Erro ao iniciar login via Discord.",
+  googleLoginError: "Login com Google indisponível no momento.",
   heroLine1: "Sua cidade",
   heroLine2: "merece o melhor.",
   heroParagraph:
@@ -42,9 +46,11 @@ const pt: Copy = {
   ],
   brandTagline: "Goat Network · FiveM Marketplace",
   welcome: "Bem-vindo",
-  subtitle: "Entre com sua conta do Discord pra acessar o painel e seus produtos da Goat Network.",
+  subtitle: "Entre pra acessar o painel, seus produtos e suas encomendas na Goat Network.",
   connecting: "Conectando...",
   continueWithDiscord: "Continuar com Discord",
+  continueWithGoogle: "Continuar com Google",
+  orDivider: "ou",
   termsPrefix: "Ao continuar você concorda com os",
   termsLinkLabel: "Termos de Uso",
   termsMiddle: "e a",
@@ -54,8 +60,9 @@ const pt: Copy = {
 
 const en: Copy = {
   pageTitle: "Sign in — Goat Network",
-  authError: "Discord authentication failed. Please try again.",
+  authError: "Authentication failed. Please try again.",
   discordLoginError: "Error starting Discord login.",
+  googleLoginError: "Google login is unavailable right now.",
   heroLine1: "Your city",
   heroLine2: "deserves the best.",
   heroParagraph:
@@ -67,15 +74,41 @@ const en: Copy = {
   ],
   brandTagline: "Goat Network · FiveM Marketplace",
   welcome: "Welcome",
-  subtitle: "Sign in with your Discord account to access the dashboard and your Goat Network products.",
+  subtitle:
+    "Sign in to access the dashboard, your products and your custom orders on Goat Network.",
   connecting: "Connecting...",
   continueWithDiscord: "Continue with Discord",
+  continueWithGoogle: "Continue with Google",
+  orDivider: "or",
   termsPrefix: "By continuing you agree to the",
   termsLinkLabel: "Terms of Use",
   termsMiddle: "and",
   privacyLinkLabel: "Privacy Policy",
   termsSuffix: "of Goat Network.",
 };
+
+function GoogleIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="#4285F4"
+        d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.88c2.27-2.09 3.57-5.17 3.57-8.82Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.88-3c-1.08.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.26v3.11A11.998 11.998 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28V6.61H1.26A11.998 11.998 0 0 0 0 12c0 1.94.46 3.77 1.26 5.39l4.01-3.11Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.26 6.61l4.01 3.11C6.22 6.88 8.87 4.77 12 4.77Z"
+      />
+    </svg>
+  );
+}
 
 export default function AuthPage() {
   const { lang } = useLanguage();
@@ -90,27 +123,40 @@ export default function AuthPage() {
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-
-    if (code) {
-      setLoading(true);
-      api
-        .handleDiscordCallback(code)
-        .then((data) => {
-          if (data.user) {
-            localStorage.setItem("goat_user", JSON.stringify(data.user));
-          }
-          if (data.token) {
-            localStorage.setItem("goat_auth_token", data.token);
-          }
-          window.location.href = "/";
-        })
-        .catch((err) => {
-          setErrorMsg(t.authError);
-          console.error(err);
-        })
-        .finally(() => setLoading(false));
+    const nextParam = urlParams.get("next");
+    if (nextParam) {
+      sessionStorage.setItem("goat_auth_next", nextParam);
     }
+
+    const code = urlParams.get("code");
+    if (!code) return;
+
+    // O provider ecoa "state" de volta junto com o "code" - usamos isso pra
+    // saber se esse callback é do Discord ou do Google (mesma página /auth
+    // trata os dois). Sem state, assume Discord (compatibilidade com links
+    // antigos que não tinham esse param).
+    const state = urlParams.get("state");
+    const isGoogle = state === "google";
+
+    setLoading(true);
+    const callback = isGoogle ? api.handleGoogleCallback(code) : api.handleDiscordCallback(code);
+    callback
+      .then((data) => {
+        if (data.user) {
+          localStorage.setItem("goat_user", JSON.stringify(data.user));
+        }
+        if (data.token) {
+          localStorage.setItem("goat_auth_token", data.token);
+        }
+        const next = sessionStorage.getItem("goat_auth_next");
+        sessionStorage.removeItem("goat_auth_next");
+        window.location.href = next || "/";
+      })
+      .catch((err) => {
+        setErrorMsg(t.authError);
+        console.error(err);
+      })
+      .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
@@ -121,6 +167,17 @@ export default function AuthPage() {
       window.location.href = url;
     } catch {
       setErrorMsg(t.discordLoginError);
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleClick = async () => {
+    setLoading(true);
+    try {
+      const url = await api.getGoogleLoginUrl();
+      window.location.href = url;
+    } catch (err: any) {
+      setErrorMsg(err?.message || t.googleLoginError);
       setLoading(false);
     }
   };
@@ -174,9 +231,7 @@ export default function AuthPage() {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
           >
             <h2 className="mt-8 text-[26px] font-semibold tracking-tight lg:mt-0">{t.welcome}</h2>
-            <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">
-              {t.subtitle}
-            </p>
+            <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground">{t.subtitle}</p>
 
             {errorMsg && (
               <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-400">
@@ -192,6 +247,24 @@ export default function AuthPage() {
             >
               <ShieldCheck className="h-4 w-4" />
               {loading ? t.connecting : t.continueWithDiscord}
+            </MriButton>
+
+            <div className="mt-4 flex items-center gap-3">
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                {t.orDivider}
+              </span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+
+            <MriButton
+              variant="outline"
+              onClick={handleGoogleClick}
+              disabled={loading}
+              className="mt-4 w-full rounded-xl border-hairline py-3 text-sm"
+            >
+              <GoogleIcon className="h-4 w-4" />
+              {loading ? t.connecting : t.continueWithGoogle}
             </MriButton>
 
             <p className="mt-8 text-center text-[12px] leading-relaxed text-muted-foreground">

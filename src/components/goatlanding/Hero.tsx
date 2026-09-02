@@ -23,29 +23,29 @@ type Copy = {
   heroTitlePost: string;
   subtitle: string;
   ctaProducts: string;
-  ctaAbout: string;
+  ctaOrder: string;
   runningInProduction: string;
 };
 
 const pt: Copy = {
-  eyebrow: "Loja oficial Goat Network",
-  heroTitlePre: "Recursos pra servidor ",
-  heroTitlePost: ", começando pelo Anticheat.",
+  eyebrow: "Goat Network · Estúdio de software & FiveM",
+  heroTitlePre: "Sistemas, apps e sites — e o ",
+  heroTitlePost: " que sua cidade já confia.",
   subtitle:
-    "Pagamento via Stripe, licença liberada na hora e suporte direto no Discord — em qualquer produto do catálogo.",
-  ctaProducts: "Ver produtos",
-  ctaAbout: "Sobre a Goat Network",
+    "Construímos sistemas sob encomenda pra empresas e mantemos o GOAT Anticheat, referência em proteção pra servidores FiveM. Pagamento seguro, entrega rápida, suporte de verdade.",
+  ctaProducts: "Ver produtos FiveM",
+  ctaOrder: "Encomendar um sistema",
   runningInProduction: "Rodando em produção em",
 };
 
 const en: Copy = {
-  eyebrow: "Official Goat Network store",
-  heroTitlePre: "Resources for your ",
-  heroTitlePost: " server, starting with Anticheat.",
+  eyebrow: "Goat Network · Software studio & FiveM",
+  heroTitlePre: "Systems, apps and sites — plus the ",
+  heroTitlePost: " your city already trusts.",
   subtitle:
-    "Payment via Stripe, license unlocked instantly, and direct support on Discord — on every product in the catalog.",
-  ctaProducts: "View products",
-  ctaAbout: "About Goat Network",
+    "We build custom software for businesses and keep running GOAT Anticheat, the reference in FiveM server protection. Secure payment, fast delivery, real support.",
+  ctaProducts: "View FiveM products",
+  ctaOrder: "Order a system",
   runningInProduction: "Running in production on",
 };
 
@@ -281,7 +281,7 @@ export function Hero() {
               className="mx-auto mt-5 max-w-[720px] text-[40px] leading-[1.06] font-semibold tracking-[-0.02em] text-balance sm:text-[54px]"
             >
               {t.heroTitlePre}
-              <span className="text-gold">FiveM</span>
+              <span className="text-gold">Anticheat</span>
               {t.heroTitlePost}
             </h1>
             <p
@@ -300,7 +300,7 @@ export function Hero() {
                   variant="solid"
                   className="rounded-lg px-6 py-3 text-[13.5px] shadow-[0_0_0_1px_oklch(0.94_0.012_240/0.4)] transition-transform hover:scale-[1.02] hover:brightness-100"
                 >
-                  <a href="/products">{t.ctaProducts}</a>
+                  <a href="/encomendar">{t.ctaOrder}</a>
                 </MriButton>
               </Magnetic>
               <MriButton
@@ -308,7 +308,7 @@ export function Hero() {
                 variant="outline"
                 className="rounded-lg border-hairline px-6 py-3 text-[13.5px] text-foreground/85 hover:bg-transparent hover:border-gold/40 hover:text-foreground"
               >
-                <a href="/empresa">{t.ctaAbout}</a>
+                <a href="/products">{t.ctaProducts}</a>
               </MriButton>
             </div>
           </div>

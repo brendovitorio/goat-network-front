@@ -20,6 +20,9 @@ import {
   Search,
   ShieldAlert,
   Users,
+  Briefcase,
+  Send,
+  Mail,
 } from "lucide-react";
 import { Nav } from "@/components/goatlanding/Nav";
 import { MriTabs } from "@/components/ui/MriTabs";
@@ -30,6 +33,7 @@ import {
   UserProfile,
   CouponItem,
   AdminLicenseSearchResult,
+  SystemOrderItem,
   productLogoUrl,
 } from "@/lib/goat-api";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -47,6 +51,7 @@ type Copy = {
     catalog: string;
     clients: string;
     coupons: string;
+    orders: string;
   };
   newProduct: {
     heading: string;
@@ -168,6 +173,29 @@ type Copy = {
     deleteServer: string;
     deletingServer: string;
   };
+  orders: {
+    heading: string;
+    description: string;
+    empty: string;
+    statusLabel: string;
+    statuses: Record<SystemOrderItem["status"], string>;
+    types: Record<SystemOrderItem["projectType"], string>;
+    priceLabel: string;
+    pricePlaceholder: string;
+    savePrice: string;
+    savingPrice: string;
+    notesLabel: string;
+    notesPlaceholder: string;
+    saveNotes: string;
+    messagesHeading: string;
+    noMessages: string;
+    replyLabel: string;
+    replyPlaceholder: string;
+    sendReply: string;
+    sendingReply: string;
+    sendingTo: (email: string) => string;
+    noEmail: string;
+  };
   catalog: {
     heading: string;
     refresh: string;
@@ -249,6 +277,12 @@ type Copy = {
     confirmDeleteServer: (name: string) => string;
     serverDeleted: (name: string) => string;
     deleteServerError: string;
+    loadOrdersError: string;
+    orderUpdated: string;
+    updateOrderError: string;
+    replyMessageRequired: string;
+    replySent: (email: string) => string;
+    replyOrderError: string;
   };
 };
 
@@ -261,6 +295,7 @@ const pt: Copy = {
     catalog: "Catálogo",
     clients: "Clientes",
     coupons: "Cupons",
+    orders: "Encomendas",
   },
   newProduct: {
     heading: "Novo produto (resource)",
@@ -388,6 +423,46 @@ const pt: Copy = {
     deleteServer: "Excluir produto",
     deletingServer: "Excluindo...",
   },
+  orders: {
+    heading: "Encomendas de sistema",
+    description:
+      "Pedidos de sistemas, apps e sites sob encomenda. Toda resposta vai direto pro e-mail cadastrado na conta do cliente.",
+    empty: "Nenhuma encomenda recebida ainda.",
+    statusLabel: "Status",
+    statuses: {
+      pending: "Recebida",
+      analyzing: "Em análise",
+      quoted: "Orçamento enviado",
+      accepted: "Aceita",
+      rejected: "Recusada",
+      in_progress: "Em desenvolvimento",
+      completed: "Concluída",
+    },
+    types: {
+      web_system: "Sistema web",
+      mobile_app: "Aplicativo mobile",
+      website: "Site institucional",
+      ecommerce: "E-commerce",
+      automation_bot: "Automação / bot",
+      other: "Outro",
+    },
+    priceLabel: "Valor do orçamento (R$)",
+    pricePlaceholder: "5000.00",
+    savePrice: "Salvar",
+    savingPrice: "Salvando...",
+    notesLabel: "Notas internas (só o time vê)",
+    notesPlaceholder: "Anotações internas sobre esse pedido...",
+    saveNotes: "Salvar notas",
+    messagesHeading: "Histórico de respostas",
+    noMessages: "Ainda não respondemos esse cliente.",
+    replyLabel: "Responder por e-mail",
+    replyPlaceholder: "Escreva a resposta que vai pro e-mail do cliente...",
+    sendReply: "Enviar resposta",
+    sendingReply: "Enviando...",
+    sendingTo: (email) => `Enviando pra: ${email}`,
+    noEmail:
+      "Esse cliente não tem e-mail cadastrado na conta — peça pra ele logar com Google ou atualizar o e-mail.",
+  },
   catalog: {
     heading: "Catálogo",
     refresh: "Atualizar",
@@ -441,7 +516,8 @@ const pt: Copy = {
     updatePriceError: "Erro ao atualizar preço.",
     updatePlanError: "Erro ao atualizar plano.",
     chooseFileFirst: "Escolha um arquivo .zip antes de enviar.",
-    fileUpdated: (code) => `Arquivo de '${code}' atualizado - já vale pra quem tiver licença ativa.`,
+    fileUpdated: (code) =>
+      `Arquivo de '${code}' atualizado - já vale pra quem tiver licença ativa.`,
     uploadFileError: "Erro ao enviar arquivo.",
     planNameRequired: "O nome do plano não pode ficar vazio.",
     detailsUpdated: (code) => `Detalhes de '${code}' atualizados.`,
@@ -459,7 +535,8 @@ const pt: Copy = {
     invalidAmount: "Valor de desconto inválido.",
     couponCreated: "Cupom criado na Stripe.",
     createCouponError: "Erro ao criar cupom.",
-    confirmDeactivateCoupon: (code) => `Desativar o cupom '${code}'? Ele para de funcionar imediatamente.`,
+    confirmDeactivateCoupon: (code) =>
+      `Desativar o cupom '${code}'? Ele para de funcionar imediatamente.`,
     deactivateCouponError: "Erro ao desativar cupom.",
     provideDiscordIdOrKey: "Informe o Discord ID ou a chave de licença.",
     searchLicenseError: "Erro ao buscar cliente.",
@@ -472,6 +549,12 @@ const pt: Copy = {
       `Excluir o produto '${name}'? Ele some do dashboard do cliente e a licença vinculada é apagada permanentemente (a chave deixa de existir). Essa ação não pode ser desfeita.`,
     serverDeleted: (name) => `Produto '${name}' e a licença vinculada foram excluídos.`,
     deleteServerError: "Erro ao excluir o produto do cliente.",
+    loadOrdersError: "Erro ao carregar encomendas.",
+    orderUpdated: "Encomenda atualizada.",
+    updateOrderError: "Erro ao atualizar encomenda.",
+    replyMessageRequired: "Escreva uma mensagem antes de enviar.",
+    replySent: (email) => `Resposta enviada pra ${email}.`,
+    replyOrderError: "Erro ao enviar resposta por e-mail.",
   },
 };
 
@@ -484,6 +567,7 @@ const en: Copy = {
     catalog: "Catalog",
     clients: "Clients",
     coupons: "Coupons",
+    orders: "Custom Orders",
   },
   newProduct: {
     heading: "New product (resource)",
@@ -497,7 +581,8 @@ const en: Copy = {
     descriptionLabel: "Description",
     descriptionPlaceholder: "Short product description",
     logoLabel: "Logo (optional — PNG/JPG/WEBP/SVG, up to 1MB)",
-    logoHint: "If you don't upload one, the product uses the default Goat Network logo (same as the favicon).",
+    logoHint:
+      "If you don't upload one, the product uses the default Goat Network logo (same as the favicon).",
     submitIdle: "Create product",
     submitBusy: "Creating...",
   },
@@ -611,6 +696,46 @@ const en: Copy = {
     deleteServer: "Delete product",
     deletingServer: "Deleting...",
   },
+  orders: {
+    heading: "Custom system orders",
+    description:
+      "Requests for custom systems, apps and sites. Every reply goes straight to the customer's registered account email.",
+    empty: "No orders received yet.",
+    statusLabel: "Status",
+    statuses: {
+      pending: "Received",
+      analyzing: "Under review",
+      quoted: "Quote sent",
+      accepted: "Accepted",
+      rejected: "Declined",
+      in_progress: "In progress",
+      completed: "Completed",
+    },
+    types: {
+      web_system: "Web system",
+      mobile_app: "Mobile app",
+      website: "Institutional site",
+      ecommerce: "E-commerce",
+      automation_bot: "Automation / bot",
+      other: "Other",
+    },
+    priceLabel: "Quoted price (R$)",
+    pricePlaceholder: "5000.00",
+    savePrice: "Save",
+    savingPrice: "Saving...",
+    notesLabel: "Internal notes (team only)",
+    notesPlaceholder: "Internal notes about this order...",
+    saveNotes: "Save notes",
+    messagesHeading: "Reply history",
+    noMessages: "No reply sent to this customer yet.",
+    replyLabel: "Reply by email",
+    replyPlaceholder: "Write the reply that will be sent to the customer's email...",
+    sendReply: "Send reply",
+    sendingReply: "Sending...",
+    sendingTo: (email) => `Sending to: ${email}`,
+    noEmail:
+      "This customer has no email on their account — ask them to sign in with Google or update their email.",
+  },
   catalog: {
     heading: "Catalog",
     refresh: "Refresh",
@@ -666,7 +791,8 @@ const en: Copy = {
     updatePriceError: "Error updating price.",
     updatePlanError: "Error updating plan.",
     chooseFileFirst: "Choose a .zip file before uploading.",
-    fileUpdated: (code) => `File for '${code}' updated — already applies to anyone with an active license.`,
+    fileUpdated: (code) =>
+      `File for '${code}' updated — already applies to anyone with an active license.`,
     uploadFileError: "Error uploading file.",
     planNameRequired: "The plan name can't be empty.",
     detailsUpdated: (code) => `Details for '${code}' updated.`,
@@ -697,6 +823,12 @@ const en: Copy = {
       `Delete product '${name}'? It disappears from the customer's dashboard and the linked license is permanently deleted (the key stops existing). This cannot be undone.`,
     serverDeleted: (name) => `Product '${name}' and its linked license were deleted.`,
     deleteServerError: "Error deleting the customer's product.",
+    loadOrdersError: "Error loading orders.",
+    orderUpdated: "Order updated.",
+    updateOrderError: "Error updating order.",
+    replyMessageRequired: "Write a message before sending.",
+    replySent: (email) => `Reply sent to ${email}.`,
+    replyOrderError: "Error sending email reply.",
   },
 };
 
@@ -744,7 +876,9 @@ export default function CeoPage() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
   const [authorized, setAuthorized] = useState(false);
-  const [activeTab, setActiveTab] = useState<"catalog" | "clients" | "coupons">("catalog");
+  const [activeTab, setActiveTab] = useState<"catalog" | "clients" | "coupons" | "orders">(
+    "catalog",
+  );
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [plans, setPlans] = useState<PlanItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -801,6 +935,13 @@ export default function CeoPage() {
   const [busyLicenseId, setBusyLicenseId] = useState<string | null>(null);
   const [busyDeleteServerId, setBusyDeleteServerId] = useState<string | null>(null);
 
+  const [systemOrders, setSystemOrders] = useState<SystemOrderItem[]>([]);
+  const [orderPriceEdits, setOrderPriceEdits] = useState<Record<string, string>>({});
+  const [orderNotesEdits, setOrderNotesEdits] = useState<Record<string, string>>({});
+  const [orderReplyDrafts, setOrderReplyDrafts] = useState<Record<string, string>>({});
+  const [busyOrderId, setBusyOrderId] = useState<string | null>(null);
+  const [sendingReplyOrderId, setSendingReplyOrderId] = useState<string | null>(null);
+
   useEffect(() => {
     document.title = t.tabTitle;
   }, [lang, t.tabTitle]);
@@ -825,14 +966,16 @@ export default function CeoPage() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [productsData, plansData, couponsData] = await Promise.all([
+      const [productsData, plansData, couponsData, systemOrdersData] = await Promise.all([
         api.admin.products.getProducts(),
         api.admin.getPlans(),
         api.admin.coupons.list(),
+        api.systemOrders.admin.list(),
       ]);
       setProducts(productsData);
       setPlans(plansData);
       setCoupons(couponsData);
+      setSystemOrders(systemOrdersData);
       if (!planForm.productSlug && productsData.length > 0) {
         setPlanForm((f) => ({ ...f, productSlug: productsData[0].slug }));
       }
@@ -1282,9 +1425,7 @@ export default function CeoPage() {
         prev
           ? {
               ...prev,
-              licenses: prev.licenses.map((l) =>
-                l._id === license._id ? { ...l, status } : l,
-              ),
+              licenses: prev.licenses.map((l) => (l._id === license._id ? { ...l, status } : l)),
             }
           : prev,
       );
@@ -1318,6 +1459,76 @@ export default function CeoPage() {
     }
   };
 
+  const handleUpdateOrderStatus = async (
+    order: SystemOrderItem,
+    status: SystemOrderItem["status"],
+  ) => {
+    setBusyOrderId(order._id);
+    setMsg(null);
+    try {
+      const res = await api.systemOrders.admin.update(order._id, { status });
+      setSystemOrders((prev) => prev.map((o) => (o._id === order._id ? res.order : o)));
+      setMsg({ type: "success", text: t.messages.orderUpdated });
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.updateOrderError });
+    } finally {
+      setBusyOrderId(null);
+    }
+  };
+
+  const handleSaveOrderPrice = async (order: SystemOrderItem) => {
+    const raw = orderPriceEdits[order._id];
+    const amount = Number(raw);
+    if (!raw || !Number.isFinite(amount) || amount < 0) return;
+    setBusyOrderId(order._id);
+    setMsg(null);
+    try {
+      const res = await api.systemOrders.admin.update(order._id, { quotedPrice: amount });
+      setSystemOrders((prev) => prev.map((o) => (o._id === order._id ? res.order : o)));
+      setMsg({ type: "success", text: t.messages.orderUpdated });
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.updateOrderError });
+    } finally {
+      setBusyOrderId(null);
+    }
+  };
+
+  const handleSaveOrderNotes = async (order: SystemOrderItem) => {
+    const notes = orderNotesEdits[order._id];
+    if (notes === undefined) return;
+    setBusyOrderId(order._id);
+    setMsg(null);
+    try {
+      const res = await api.systemOrders.admin.update(order._id, { internalNotes: notes });
+      setSystemOrders((prev) => prev.map((o) => (o._id === order._id ? res.order : o)));
+      setMsg({ type: "success", text: t.messages.orderUpdated });
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.updateOrderError });
+    } finally {
+      setBusyOrderId(null);
+    }
+  };
+
+  const handleSendOrderReply = async (order: SystemOrderItem) => {
+    const message = (orderReplyDrafts[order._id] || "").trim();
+    if (!message) {
+      setMsg({ type: "error", text: t.messages.replyMessageRequired });
+      return;
+    }
+    setSendingReplyOrderId(order._id);
+    setMsg(null);
+    try {
+      const res = await api.systemOrders.admin.reply(order._id, message);
+      setSystemOrders((prev) => prev.map((o) => (o._id === order._id ? res.order : o)));
+      setOrderReplyDrafts((prev) => ({ ...prev, [order._id]: "" }));
+      setMsg({ type: "success", text: t.messages.replySent(res.sentTo) });
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.replyOrderError });
+    } finally {
+      setSendingReplyOrderId(null);
+    }
+  };
+
   if (checking) {
     return (
       <main className="relative min-h-screen bg-background text-foreground">
@@ -1340,7 +1551,9 @@ export default function CeoPage() {
               <Crown className="h-5 w-5" />
             </span>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.pageTitle}</h1>
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                {t.pageTitle}
+              </h1>
               <p className="text-[12.5px] text-muted-foreground">{t.pageSubtitle}</p>
             </div>
           </div>
@@ -1363,6 +1576,7 @@ export default function CeoPage() {
             tabs={[
               { id: "catalog", label: t.tabs.catalog, icon: Package },
               { id: "clients", label: t.tabs.clients, icon: Users },
+              { id: "orders", label: t.tabs.orders, icon: Briefcase },
               { id: "coupons", label: t.tabs.coupons, icon: Ticket },
             ]}
             activeTab={activeTab}
@@ -1374,7 +1588,11 @@ export default function CeoPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleCreateProduct}
-            className={activeTab === "catalog" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
+            className={
+              activeTab === "catalog"
+                ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+                : "hidden"
+            }
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Package className="h-4 w-4" /> {t.newProduct.heading}
@@ -1432,7 +1650,9 @@ export default function CeoPage() {
                       className="w-full rounded-xl border border-dashed border-border bg-background/50 px-4 py-3 text-[12.5px] text-muted-foreground outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-[12px] file:font-medium file:text-foreground"
                     />
                   </div>
-                  <p className="mt-1.5 text-[10.5px] text-muted-foreground/70">{t.newProduct.logoHint}</p>
+                  <p className="mt-1.5 text-[10.5px] text-muted-foreground/70">
+                    {t.newProduct.logoHint}
+                  </p>
                 </Field>
               </div>
             </div>
@@ -1451,7 +1671,11 @@ export default function CeoPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleCreatePlan}
-            className={activeTab === "catalog" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
+            className={
+              activeTab === "catalog"
+                ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+                : "hidden"
+            }
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Plus className="h-4 w-4" /> {t.newPlan.heading}
@@ -1464,7 +1688,9 @@ export default function CeoPage() {
                   className={inputClass}
                   disabled={products.length === 0}
                 >
-                  {products.length === 0 && <option value="">{t.newPlan.productEmptyOption}</option>}
+                  {products.length === 0 && (
+                    <option value="">{t.newPlan.productEmptyOption}</option>
+                  )}
                   {products.map((p) => (
                     <option key={p.slug} value={p.slug}>
                       {p.name}
@@ -1578,7 +1804,9 @@ export default function CeoPage() {
                       {productFile.name} ({(productFile.size / 1024 / 1024).toFixed(2)}MB)
                     </p>
                   )}
-                  <p className="mt-1.5 text-[10.5px] text-muted-foreground/70">{t.newPlan.fileHint}</p>
+                  <p className="mt-1.5 text-[10.5px] text-muted-foreground/70">
+                    {t.newPlan.fileHint}
+                  </p>
                 </Field>
               </div>
             </div>
@@ -1597,7 +1825,11 @@ export default function CeoPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleCreateGrant}
-            className={activeTab === "clients" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
+            className={
+              activeTab === "clients"
+                ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+                : "hidden"
+            }
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Gift className="h-4 w-4" /> {t.grants.heading}
@@ -1674,7 +1906,11 @@ export default function CeoPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleSearchLicense}
-            className={activeTab === "clients" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
+            className={
+              activeTab === "clients"
+                ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+                : "hidden"
+            }
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <KeyRound className="h-4 w-4" /> {t.licenses.heading}
@@ -1793,7 +2029,9 @@ export default function CeoPage() {
                       <MriCard key={s._id} className="border-border/40 bg-background/40 p-4">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div>
-                            <span className="text-[13px] font-semibold text-foreground">{s.name}</span>
+                            <span className="text-[13px] font-semibold text-foreground">
+                              {s.name}
+                            </span>
                             <p className="mt-0.5 text-[11px] text-muted-foreground">
                               {t.licenses.serverIpLabel}: <span className="font-mono">{s.ip}</span>
                               {" · "}
@@ -1853,7 +2091,9 @@ export default function CeoPage() {
                             className="ml-auto rounded-lg border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
                           >
                             <Trash2 className="h-3.5 w-3.5" />{" "}
-                            {busyDeleteServerId === s._id ? t.licenses.deletingServer : t.licenses.deleteServer}
+                            {busyDeleteServerId === s._id
+                              ? t.licenses.deletingServer
+                              : t.licenses.deleteServer}
                           </MriButton>
                         </div>
                       </MriCard>
@@ -1869,7 +2109,11 @@ export default function CeoPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onSubmit={handleCreateCoupon}
-            className={activeTab === "coupons" ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8" : "hidden"}
+            className={
+              activeTab === "coupons"
+                ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+                : "hidden"
+            }
           >
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Ticket className="h-4 w-4" /> {t.coupons.heading}
@@ -2015,7 +2259,9 @@ export default function CeoPage() {
                       <p className="mt-1 text-[11.5px] text-muted-foreground">
                         {c.percentOff
                           ? t.coupons.percentOffSuffix(c.percentOff)
-                          : t.coupons.amountOffSuffix((c.amountOff || 0).toFixed(2).replace(".", ","))}
+                          : t.coupons.amountOffSuffix(
+                              (c.amountOff || 0).toFixed(2).replace(".", ","),
+                            )}
                         {" · "}
                         {c.duration === "once"
                           ? t.coupons.durationOnceShort
@@ -2042,297 +2288,490 @@ export default function CeoPage() {
             </MriCard>
           )}
 
-          {/* Lista de produtos + planos */}
-          <div className={activeTab === "catalog" ? "" : "hidden"}>
-          <div className="mt-10 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-foreground">{t.catalog.heading}</h2>
-            <button
-              onClick={loadAll}
-              className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> {t.catalog.refresh}
-            </button>
-          </div>
+          {/* Encomendas de sistema */}
+          <div className={activeTab === "orders" ? "mt-6" : "hidden"}>
+            <div className="rounded-2xl border border-border/50 bg-card/40 p-8">
+              <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+                <Briefcase className="h-4 w-4" /> {t.orders.heading}
+              </h2>
+              <p className="mt-1 text-[11.5px] text-muted-foreground">{t.orders.description}</p>
 
-          <div className="mt-4 space-y-8">
-            {products.length === 0 && !loading && (
-              <p className="text-sm text-muted-foreground">{t.catalog.noProducts}</p>
-            )}
-            {products.map((product) => (
-              <div key={product.slug}>
-                <div className="flex flex-wrap items-center justify-between gap-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <img
-                      src={productLogoUrl(product)}
-                      alt={product.name}
-                      className="h-6 w-6 rounded-md border border-border object-cover"
-                    />
-                    <h3 className="text-[14px] font-semibold text-foreground">{product.name}</h3>
-                    <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-                      {product.slug}
-                    </span>
-                    <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                      {product.type === "anticheat" ? t.catalog.typeAnticheat : t.catalog.typeDownload}
-                    </span>
-                    {!product.active && (
-                      <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[10px] text-red-400">
-                        {t.catalog.inactive}
-                      </span>
-                    )}
-                  </div>
-                  <MriButton
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleToggleProductActive(product)}
-                    disabled={busyCode === product.slug}
-                    className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
-                  >
-                    <Power className="h-3.5 w-3.5" />{" "}
-                    {product.active ? t.catalog.deactivateProduct : t.catalog.reactivateProduct}
-                  </MriButton>
-                </div>
-
-                <div className="mt-3 space-y-3">
-                  {plans.filter((pl) => pl.productSlug === product.slug).length === 0 && (
-                    <p className="text-[12px] text-muted-foreground">{t.catalog.noPlans}</p>
-                  )}
-                  {plans
-                    .filter((pl) => pl.productSlug === product.slug)
-                    .map((plan) => (
-                      <MriCard
-                        key={plan.code}
-                        className={`p-6 ${plan.active ? "border-border/50 bg-card/40" : "border-border/30 bg-card/10 opacity-60"}`}
-                      >
+              {systemOrders.length === 0 ? (
+                <p className="mt-8 text-center text-[13px] text-muted-foreground">
+                  {t.orders.empty}
+                </p>
+              ) : (
+                <div className="mt-6 space-y-4">
+                  {systemOrders.map((order) => {
+                    const requester = typeof order.userId === "object" ? order.userId : null;
+                    const email = requester?.email;
+                    const busy = busyOrderId === order._id;
+                    return (
+                      <MriCard key={order._id} className="border-border/40 bg-background/40 p-5">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
+                            <p className="text-[13.5px] font-semibold text-foreground">
+                              {order.name}
+                              {order.company ? ` · ${order.company}` : ""}
+                            </p>
+                            <p className="mt-0.5 text-[11.5px] text-muted-foreground">
+                              {t.orders.types[order.projectType]}
+                              {order.phone ? ` · ${order.phone}` : ""}
+                              {order.budgetRange ? ` · ${order.budgetRange}` : ""}
+                              {order.timeline ? ` · ${order.timeline}` : ""}
+                            </p>
+                            <p className="mt-0.5 font-mono text-[10.5px] text-muted-foreground/70">
+                              {order.requestId}
+                            </p>
+                          </div>
+                          <select
+                            value={order.status}
+                            disabled={busy}
+                            onChange={(e) =>
+                              handleUpdateOrderStatus(
+                                order,
+                                e.target.value as SystemOrderItem["status"],
+                              )
+                            }
+                            className={`${inputClass} w-auto shrink-0 px-3 py-2 text-[12px]`}
+                          >
+                            {(Object.keys(t.orders.statuses) as SystemOrderItem["status"][]).map(
+                              (s) => (
+                                <option key={s} value={s}>
+                                  {t.orders.statuses[s]}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                        </div>
+
+                        <p className="mt-3 whitespace-pre-wrap rounded-lg bg-elevated/50 p-3 text-[12.5px] leading-relaxed text-muted-foreground">
+                          {order.description}
+                        </p>
+
+                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[200px_1fr]">
+                          <Field label={t.orders.priceLabel}>
                             <div className="flex items-center gap-2">
-                              <h4 className="text-[15px] font-semibold text-foreground">
-                                {plan.name}
-                              </h4>
-                              <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
-                                {plan.code}
-                              </span>
-                              {!plan.active && (
-                                <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[10px] text-red-400">
-                                  {t.catalog.archived}
-                                </span>
-                              )}
-                              {plan.hasDownload && (
-                                <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-400">
-                                  {plan.downloadFileName || t.catalog.hasFile}
-                                </span>
-                              )}
+                              <MriInput
+                                value={
+                                  orderPriceEdits[order._id] ??
+                                  (order.quotedPrice?.toString() || "")
+                                }
+                                onChange={(e) =>
+                                  setOrderPriceEdits((prev) => ({
+                                    ...prev,
+                                    [order._id]: e.target.value,
+                                  }))
+                                }
+                                className={inputClass}
+                                inputMode="decimal"
+                                placeholder={t.orders.pricePlaceholder}
+                              />
+                              <MriButton
+                                variant="outline"
+                                type="button"
+                                disabled={busy}
+                                onClick={() => handleSaveOrderPrice(order)}
+                                className="shrink-0 rounded-lg bg-background px-3 py-2 text-[11.5px] hover:bg-elevated hover:text-foreground"
+                              >
+                                <Save className="h-3.5 w-3.5" />
+                              </MriButton>
                             </div>
-                            <p className="mt-1 text-[12.5px] text-muted-foreground max-w-lg">
-                              {plan.description}
-                            </p>
-                            <p className="mt-1 text-[11px] text-muted-foreground/70">
-                              {plan.mode === "subscription"
-                                ? t.catalog.billingInterval(
-                                    plan.intervalCount,
-                                    (plan.intervalUnit as "year" | "month") ?? "month",
-                                  )
-                                : t.catalog.oneTimePayment}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-foreground">
-                              R$ {plan.amount.toFixed(2).replace(".", ",")}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">
-                              {t.catalog.priceIdLabel(plan.stripePriceId || "—")}
-                            </p>
-                          </div>
+                          </Field>
+                          <Field label={t.orders.notesLabel}>
+                            <div className="flex items-center gap-2">
+                              <MriInput
+                                value={orderNotesEdits[order._id] ?? (order.internalNotes || "")}
+                                onChange={(e) =>
+                                  setOrderNotesEdits((prev) => ({
+                                    ...prev,
+                                    [order._id]: e.target.value,
+                                  }))
+                                }
+                                className={inputClass}
+                                placeholder={t.orders.notesPlaceholder}
+                              />
+                              <MriButton
+                                variant="outline"
+                                type="button"
+                                disabled={busy}
+                                onClick={() => handleSaveOrderNotes(order)}
+                                className="shrink-0 rounded-lg bg-background px-3 py-2 text-[11.5px] hover:bg-elevated hover:text-foreground"
+                              >
+                                <Save className="h-3.5 w-3.5" />
+                              </MriButton>
+                            </div>
+                          </Field>
                         </div>
 
-                        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border/40 pt-5">
-                          <MriInput
-                            value={priceEdits[plan.code] || ""}
-                            onChange={(e) =>
-                              setPriceEdits((prev) => ({ ...prev, [plan.code]: e.target.value }))
-                            }
-                            placeholder={t.catalog.newPricePlaceholder}
-                            inputMode="decimal"
-                            className="w-40 rounded-xl border border-border bg-background/50 px-4 py-3 text-sm outline-none transition-colors focus:border-foreground/40"
-                          />
-                          <MriButton
-                            variant="outline"
-                            onClick={() => handleUpdatePrice(plan)}
-                            disabled={busyCode === plan.code}
-                            className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
-                          >
-                            <Save className="h-3.5 w-3.5" /> {t.catalog.updatePrice}
-                          </MriButton>
-                          <MriButton
-                            variant="outline"
-                            onClick={() => handleToggleActive(plan)}
-                            disabled={busyCode === plan.code}
-                            className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
-                          >
-                            <Power className="h-3.5 w-3.5" />{" "}
-                            {plan.active ? t.catalog.deactivate : t.catalog.reactivate}
-                          </MriButton>
-                          <MriButton
-                            variant="outline"
-                            onClick={() => handleToggleEditDetails(plan)}
-                            className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />{" "}
-                            {editingPlanCode === plan.code ? t.catalog.closeEdit : t.catalog.editDetails}
-                          </MriButton>
-                          <MriButton
-                            variant="danger-outline"
-                            onClick={() => handleArchive(plan)}
-                            disabled={busyCode === plan.code}
-                            className="bg-red-500/5 hover:bg-red-500/10"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" /> {t.catalog.archive}
-                          </MriButton>
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/40 pt-3">
-                          <p className="w-full text-[11px] text-muted-foreground">
-                            {plan.hasDownload
-                              ? t.catalog.currentFile(plan.downloadFileName || "produto.zip")
-                              : t.catalog.noFileYet}
+                        <div className="mt-4 border-t border-border/40 pt-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            {t.orders.messagesHeading}
                           </p>
-                          <input
-                            type="file"
-                            accept=".zip"
-                            onChange={(e) =>
-                              setPlanFileEdits((prev) => ({
-                                ...prev,
-                                [plan.code]: e.target.files?.[0] || null,
-                              }))
-                            }
-                            className="max-w-full rounded-xl border border-dashed border-border bg-background/50 px-3 py-2 text-[11.5px] text-muted-foreground outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-[12px] file:font-medium file:text-foreground"
-                          />
-                          <MriButton
-                            variant="outline"
-                            onClick={() => handleUpdateFile(plan)}
-                            disabled={uploadingFileCode === plan.code || !planFileEdits[plan.code]}
-                            className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
-                          >
-                            <Upload className="h-3.5 w-3.5" />{" "}
-                            {uploadingFileCode === plan.code
-                              ? t.catalog.uploading
-                              : plan.hasDownload
-                                ? t.catalog.replaceFile
-                                : t.catalog.uploadFile}
-                          </MriButton>
-                        </div>
+                          {order.messages.length === 0 ? (
+                            <p className="mt-2 text-[12px] text-muted-foreground">
+                              {t.orders.noMessages}
+                            </p>
+                          ) : (
+                            <div className="mt-2 space-y-2">
+                              {order.messages.map((m, idx) => (
+                                <div key={idx} className="rounded-lg bg-elevated/60 p-3">
+                                  <p className="whitespace-pre-wrap text-[12.5px] text-foreground/90">
+                                    {m.body}
+                                  </p>
+                                  <p className="mt-1 text-[10.5px] text-muted-foreground">
+                                    {formatDate(m.sentAt, lang)}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
 
-                        {editingPlanCode === plan.code && planDetailsEdits[plan.code] && (
-                          <div className="mt-3 border-t border-border/40 pt-4">
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                              <Field label={t.catalog.editNameLabel}>
-                                <MriInput
-                                  value={planDetailsEdits[plan.code].name}
-                                  onChange={(e) =>
-                                    setPlanDetailsEdits((prev) => ({
-                                      ...prev,
-                                      [plan.code]: { ...prev[plan.code], name: e.target.value },
-                                    }))
-                                  }
-                                  className={inputClass}
-                                />
-                              </Field>
-                              <Field label={t.catalog.editBillingNoteLabel}>
-                                <MriInput
-                                  value={planDetailsEdits[plan.code].billingNote}
-                                  onChange={(e) =>
-                                    setPlanDetailsEdits((prev) => ({
-                                      ...prev,
-                                      [plan.code]: {
-                                        ...prev[plan.code],
-                                        billingNote: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  className={inputClass}
-                                />
-                              </Field>
-                              <div className="sm:col-span-2">
-                                <Field label={t.catalog.editDescriptionLabel}>
+                          <div className="mt-3">
+                            <Field label={t.orders.replyLabel}>
+                              <textarea
+                                value={orderReplyDrafts[order._id] || ""}
+                                onChange={(e) =>
+                                  setOrderReplyDrafts((prev) => ({
+                                    ...prev,
+                                    [order._id]: e.target.value,
+                                  }))
+                                }
+                                className={`${inputClass} min-h-[80px]`}
+                                placeholder={t.orders.replyPlaceholder}
+                              />
+                            </Field>
+                            {email ? (
+                              <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                <Mail className="h-3 w-3" /> {t.orders.sendingTo(email)}
+                              </p>
+                            ) : (
+                              <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-red-400">
+                                <AlertCircle className="h-3 w-3" /> {t.orders.noEmail}
+                              </p>
+                            )}
+                            <MriButton
+                              variant="outline"
+                              type="button"
+                              disabled={!email || sendingReplyOrderId === order._id}
+                              onClick={() => handleSendOrderReply(order)}
+                              className="mt-2 rounded-lg bg-background px-4 py-2 text-[12px] hover:bg-elevated hover:text-foreground"
+                            >
+                              <Send className="h-3.5 w-3.5" />{" "}
+                              {sendingReplyOrderId === order._id
+                                ? t.orders.sendingReply
+                                : t.orders.sendReply}
+                            </MriButton>
+                          </div>
+                        </div>
+                      </MriCard>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Lista de produtos + planos */}
+          <div className={activeTab === "catalog" ? "" : "hidden"}>
+            <div className="mt-10 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-foreground">{t.catalog.heading}</h2>
+              <button
+                onClick={loadAll}
+                className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />{" "}
+                {t.catalog.refresh}
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-8">
+              {products.length === 0 && !loading && (
+                <p className="text-sm text-muted-foreground">{t.catalog.noProducts}</p>
+              )}
+              {products.map((product) => (
+                <div key={product.slug}>
+                  <div className="flex flex-wrap items-center justify-between gap-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <img
+                        src={productLogoUrl(product)}
+                        alt={product.name}
+                        className="h-6 w-6 rounded-md border border-border object-cover"
+                      />
+                      <h3 className="text-[14px] font-semibold text-foreground">{product.name}</h3>
+                      <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                        {product.slug}
+                      </span>
+                      <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {product.type === "anticheat"
+                          ? t.catalog.typeAnticheat
+                          : t.catalog.typeDownload}
+                      </span>
+                      {!product.active && (
+                        <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[10px] text-red-400">
+                          {t.catalog.inactive}
+                        </span>
+                      )}
+                    </div>
+                    <MriButton
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleToggleProductActive(product)}
+                      disabled={busyCode === product.slug}
+                      className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
+                    >
+                      <Power className="h-3.5 w-3.5" />{" "}
+                      {product.active ? t.catalog.deactivateProduct : t.catalog.reactivateProduct}
+                    </MriButton>
+                  </div>
+
+                  <div className="mt-3 space-y-3">
+                    {plans.filter((pl) => pl.productSlug === product.slug).length === 0 && (
+                      <p className="text-[12px] text-muted-foreground">{t.catalog.noPlans}</p>
+                    )}
+                    {plans
+                      .filter((pl) => pl.productSlug === product.slug)
+                      .map((plan) => (
+                        <MriCard
+                          key={plan.code}
+                          className={`p-6 ${plan.active ? "border-border/50 bg-card/40" : "border-border/30 bg-card/10 opacity-60"}`}
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-[15px] font-semibold text-foreground">
+                                  {plan.name}
+                                </h4>
+                                <span className="rounded bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                                  {plan.code}
+                                </span>
+                                {!plan.active && (
+                                  <span className="rounded bg-red-500/10 px-1.5 py-0.5 text-[10px] text-red-400">
+                                    {t.catalog.archived}
+                                  </span>
+                                )}
+                                {plan.hasDownload && (
+                                  <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-400">
+                                    {plan.downloadFileName || t.catalog.hasFile}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="mt-1 text-[12.5px] text-muted-foreground max-w-lg">
+                                {plan.description}
+                              </p>
+                              <p className="mt-1 text-[11px] text-muted-foreground/70">
+                                {plan.mode === "subscription"
+                                  ? t.catalog.billingInterval(
+                                      plan.intervalCount,
+                                      (plan.intervalUnit as "year" | "month") ?? "month",
+                                    )
+                                  : t.catalog.oneTimePayment}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-foreground">
+                                R$ {plan.amount.toFixed(2).replace(".", ",")}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground">
+                                {t.catalog.priceIdLabel(plan.stripePriceId || "—")}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border/40 pt-5">
+                            <MriInput
+                              value={priceEdits[plan.code] || ""}
+                              onChange={(e) =>
+                                setPriceEdits((prev) => ({ ...prev, [plan.code]: e.target.value }))
+                              }
+                              placeholder={t.catalog.newPricePlaceholder}
+                              inputMode="decimal"
+                              className="w-40 rounded-xl border border-border bg-background/50 px-4 py-3 text-sm outline-none transition-colors focus:border-foreground/40"
+                            />
+                            <MriButton
+                              variant="outline"
+                              onClick={() => handleUpdatePrice(plan)}
+                              disabled={busyCode === plan.code}
+                              className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
+                            >
+                              <Save className="h-3.5 w-3.5" /> {t.catalog.updatePrice}
+                            </MriButton>
+                            <MriButton
+                              variant="outline"
+                              onClick={() => handleToggleActive(plan)}
+                              disabled={busyCode === plan.code}
+                              className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
+                            >
+                              <Power className="h-3.5 w-3.5" />{" "}
+                              {plan.active ? t.catalog.deactivate : t.catalog.reactivate}
+                            </MriButton>
+                            <MriButton
+                              variant="outline"
+                              onClick={() => handleToggleEditDetails(plan)}
+                              className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />{" "}
+                              {editingPlanCode === plan.code
+                                ? t.catalog.closeEdit
+                                : t.catalog.editDetails}
+                            </MriButton>
+                            <MriButton
+                              variant="danger-outline"
+                              onClick={() => handleArchive(plan)}
+                              disabled={busyCode === plan.code}
+                              className="bg-red-500/5 hover:bg-red-500/10"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> {t.catalog.archive}
+                            </MriButton>
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/40 pt-3">
+                            <p className="w-full text-[11px] text-muted-foreground">
+                              {plan.hasDownload
+                                ? t.catalog.currentFile(plan.downloadFileName || "produto.zip")
+                                : t.catalog.noFileYet}
+                            </p>
+                            <input
+                              type="file"
+                              accept=".zip"
+                              onChange={(e) =>
+                                setPlanFileEdits((prev) => ({
+                                  ...prev,
+                                  [plan.code]: e.target.files?.[0] || null,
+                                }))
+                              }
+                              className="max-w-full rounded-xl border border-dashed border-border bg-background/50 px-3 py-2 text-[11.5px] text-muted-foreground outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-[12px] file:font-medium file:text-foreground"
+                            />
+                            <MriButton
+                              variant="outline"
+                              onClick={() => handleUpdateFile(plan)}
+                              disabled={
+                                uploadingFileCode === plan.code || !planFileEdits[plan.code]
+                              }
+                              className="rounded-lg bg-background hover:bg-elevated hover:text-foreground"
+                            >
+                              <Upload className="h-3.5 w-3.5" />{" "}
+                              {uploadingFileCode === plan.code
+                                ? t.catalog.uploading
+                                : plan.hasDownload
+                                  ? t.catalog.replaceFile
+                                  : t.catalog.uploadFile}
+                            </MriButton>
+                          </div>
+
+                          {editingPlanCode === plan.code && planDetailsEdits[plan.code] && (
+                            <div className="mt-3 border-t border-border/40 pt-4">
+                              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <Field label={t.catalog.editNameLabel}>
                                   <MriInput
-                                    value={planDetailsEdits[plan.code].description}
+                                    value={planDetailsEdits[plan.code].name}
+                                    onChange={(e) =>
+                                      setPlanDetailsEdits((prev) => ({
+                                        ...prev,
+                                        [plan.code]: { ...prev[plan.code], name: e.target.value },
+                                      }))
+                                    }
+                                    className={inputClass}
+                                  />
+                                </Field>
+                                <Field label={t.catalog.editBillingNoteLabel}>
+                                  <MriInput
+                                    value={planDetailsEdits[plan.code].billingNote}
                                     onChange={(e) =>
                                       setPlanDetailsEdits((prev) => ({
                                         ...prev,
                                         [plan.code]: {
                                           ...prev[plan.code],
-                                          description: e.target.value,
+                                          billingNote: e.target.value,
                                         },
                                       }))
                                     }
                                     className={inputClass}
                                   />
                                 </Field>
-                              </div>
-                              <Field label={t.catalog.editBadgeLabel}>
-                                <MriInput
-                                  value={planDetailsEdits[plan.code].badge}
-                                  onChange={(e) =>
-                                    setPlanDetailsEdits((prev) => ({
-                                      ...prev,
-                                      [plan.code]: { ...prev[plan.code], badge: e.target.value },
-                                    }))
-                                  }
-                                  className={inputClass}
-                                  placeholder={t.newPlan.badgePlaceholder}
-                                />
-                              </Field>
-                              <Field label={t.catalog.editSortOrderLabel}>
-                                <MriInput
-                                  value={planDetailsEdits[plan.code].sortOrder}
-                                  onChange={(e) =>
-                                    setPlanDetailsEdits((prev) => ({
-                                      ...prev,
-                                      [plan.code]: {
-                                        ...prev[plan.code],
-                                        sortOrder: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  className={inputClass}
-                                  inputMode="numeric"
-                                />
-                              </Field>
-                              <div className="sm:col-span-2">
-                                <Field label={t.catalog.editFeaturesLabel}>
-                                  <textarea
-                                    value={planDetailsEdits[plan.code].features}
+                                <div className="sm:col-span-2">
+                                  <Field label={t.catalog.editDescriptionLabel}>
+                                    <MriInput
+                                      value={planDetailsEdits[plan.code].description}
+                                      onChange={(e) =>
+                                        setPlanDetailsEdits((prev) => ({
+                                          ...prev,
+                                          [plan.code]: {
+                                            ...prev[plan.code],
+                                            description: e.target.value,
+                                          },
+                                        }))
+                                      }
+                                      className={inputClass}
+                                    />
+                                  </Field>
+                                </div>
+                                <Field label={t.catalog.editBadgeLabel}>
+                                  <MriInput
+                                    value={planDetailsEdits[plan.code].badge}
+                                    onChange={(e) =>
+                                      setPlanDetailsEdits((prev) => ({
+                                        ...prev,
+                                        [plan.code]: { ...prev[plan.code], badge: e.target.value },
+                                      }))
+                                    }
+                                    className={inputClass}
+                                    placeholder={t.newPlan.badgePlaceholder}
+                                  />
+                                </Field>
+                                <Field label={t.catalog.editSortOrderLabel}>
+                                  <MriInput
+                                    value={planDetailsEdits[plan.code].sortOrder}
                                     onChange={(e) =>
                                       setPlanDetailsEdits((prev) => ({
                                         ...prev,
                                         [plan.code]: {
                                           ...prev[plan.code],
-                                          features: e.target.value,
+                                          sortOrder: e.target.value,
                                         },
                                       }))
                                     }
-                                    className={`${inputClass} min-h-[90px]`}
+                                    className={inputClass}
+                                    inputMode="numeric"
                                   />
                                 </Field>
+                                <div className="sm:col-span-2">
+                                  <Field label={t.catalog.editFeaturesLabel}>
+                                    <textarea
+                                      value={planDetailsEdits[plan.code].features}
+                                      onChange={(e) =>
+                                        setPlanDetailsEdits((prev) => ({
+                                          ...prev,
+                                          [plan.code]: {
+                                            ...prev[plan.code],
+                                            features: e.target.value,
+                                          },
+                                        }))
+                                      }
+                                      className={`${inputClass} min-h-[90px]`}
+                                    />
+                                  </Field>
+                                </div>
                               </div>
+                              <MriButton
+                                variant="ghost"
+                                onClick={() => handleSaveDetails(plan)}
+                                disabled={savingDetailsCode === plan.code}
+                                className="mt-4 rounded-lg bg-foreground px-4 py-2.5 text-[12px] text-background hover:bg-foreground hover:opacity-90"
+                              >
+                                <Save className="h-3.5 w-3.5" />{" "}
+                                {savingDetailsCode === plan.code
+                                  ? t.catalog.saving
+                                  : t.catalog.saveChanges}
+                              </MriButton>
                             </div>
-                            <MriButton
-                              variant="ghost"
-                              onClick={() => handleSaveDetails(plan)}
-                              disabled={savingDetailsCode === plan.code}
-                              className="mt-4 rounded-lg bg-foreground px-4 py-2.5 text-[12px] text-background hover:bg-foreground hover:opacity-90"
-                            >
-                              <Save className="h-3.5 w-3.5" />{" "}
-                              {savingDetailsCode === plan.code ? t.catalog.saving : t.catalog.saveChanges}
-                            </MriButton>
-                          </div>
-                        )}
-                      </MriCard>
-                    ))}
+                          )}
+                        </MriCard>
+                      ))}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

@@ -294,6 +294,7 @@ const footerPt: FooterCopy = {
       t: "Produto",
       l: [
         { label: "Produtos", href: "/products" },
+        { label: "Sistemas sob encomenda", href: "/encomendar" },
         { label: "Changelog", href: "/changelog" },
         { label: "FAQs", href: "/#faq" },
       ],
@@ -325,6 +326,7 @@ const footerEn: FooterCopy = {
       t: "Product",
       l: [
         { label: "Products", href: "/products" },
+        { label: "Custom Systems", href: "/encomendar" },
         { label: "Changelog", href: "/changelog" },
         { label: "FAQs", href: "/#faq" },
       ],

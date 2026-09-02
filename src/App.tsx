@@ -4,6 +4,8 @@ import Changelog from "./pages/Changelog.tsx";
 import Empresa from "./pages/Empresa.tsx";
 import Products from "./pages/Products.tsx";
 import AnticheatProduct from "./pages/AnticheatProduct.tsx";
+import OrderSystem from "./pages/OrderSystem.tsx";
+import MyOrders from "./pages/MyOrders.tsx";
 import Terms from "./pages/Terms.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import Servers from "./pages/Servers.tsx";
@@ -28,6 +30,8 @@ function App() {
             <Route path="/products" element={<Products />} />
             <Route path="/pricing" element={<Navigate to="/products" replace />} />
             <Route path="/produtos/goat-anticheat" element={<AnticheatProduct />} />
+            <Route path="/encomendar" element={<OrderSystem />} />
+            <Route path="/minhas-encomendas" element={<MyOrders />} />
             <Route path="/termos" element={<Terms />} />
             <Route path="/privacidade" element={<Privacy />} />
             <Route path="/servers" element={<Servers />} />

@@ -1,7 +1,6 @@
 import { getApiLang } from "@/i18n/LanguageContext";
 
-export const BACKEND_URL =
-  import.meta.env.VITE_BACKEND_URL || "https://api.goatnetwork.dev/api";
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://api.goatnetwork.dev/api";
 
 export type ServerItem = {
   _id: string;
@@ -225,10 +224,12 @@ export type UserProfile = {
   _id?: string;
   id?: string;
   uuid: string;
-  discordId: string;
+  discordId?: string;
+  googleId?: string;
   username: string;
   discriminator?: string;
   avatar?: string;
+  avatarUrl?: string;
   email?: string;
   role: "user" | "admin" | "staff";
   activePlan: string;
@@ -241,6 +242,50 @@ export const discordAvatarUrl = (discordId?: string, avatar?: string): string | 
   if (!discordId || !avatar) return null;
   const ext = avatar.startsWith("a_") ? "gif" : "png";
   return `https://cdn.discordapp.com/avatars/${discordId}/${avatar}.${ext}`;
+};
+
+// Foto de perfil pra qualquer método de login: Google já manda uma URL
+// pronta (avatarUrl), Discord precisa montar a URL do CDN a partir do hash.
+export const userAvatarUrl = (
+  user?: {
+    avatarUrl?: string;
+    discordId?: string;
+    avatar?: string;
+  } | null,
+): string | null => {
+  if (!user) return null;
+  return user.avatarUrl || discordAvatarUrl(user.discordId, user.avatar);
+};
+
+export type SystemOrderItem = {
+  _id: string;
+  requestId: string;
+  userId:
+    | string
+    | {
+        _id: string;
+        username: string;
+        email?: string;
+        discordId?: string;
+        avatar?: string;
+        avatarUrl?: string;
+      };
+  userUuid: string;
+  name: string;
+  company?: string;
+  phone?: string;
+  projectType: "web_system" | "mobile_app" | "website" | "automation_bot" | "ecommerce" | "other";
+  description: string;
+  budgetRange?: string;
+  timeline?: string;
+  status:
+    "pending" | "analyzing" | "quoted" | "accepted" | "rejected" | "in_progress" | "completed";
+  quotedPrice?: number;
+  quotedCurrency?: string;
+  internalNotes?: string;
+  messages: { body: string; sentAt: string }[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ChangelogEntry = {
@@ -702,7 +747,10 @@ export const api = {
       },
     },
     licenses: {
-      search: (query: { discordId?: string; licenseKey?: string }): Promise<AdminLicenseSearchResult> => {
+      search: (query: {
+        discordId?: string;
+        licenseKey?: string;
+      }): Promise<AdminLicenseSearchResult> => {
         const params = new URLSearchParams();
         if (query.discordId) params.set("discordId", query.discordId.trim());
         if (query.licenseKey) params.set("licenseKey", query.licenseKey.trim());
@@ -734,6 +782,71 @@ export const api = {
         return safeFetchJson(`${BACKEND_URL}/admin/licenses/servers/${serverId}`, {
           method: "DELETE",
           headers: getHeaders(),
+        });
+      },
+    },
+  },
+
+  systemOrders: {
+    create: (payload: {
+      name: string;
+      company?: string;
+      phone?: string;
+      projectType: SystemOrderItem["projectType"];
+      description: string;
+      budgetRange?: string;
+      timeline?: string;
+    }): Promise<{ success: boolean; message: string; order: SystemOrderItem }> => {
+      return safeFetchJson(`${BACKEND_URL}/system-orders`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+      });
+    },
+    mine: async (): Promise<SystemOrderItem[]> => {
+      try {
+        const data = await safeFetchJson(`${BACKEND_URL}/system-orders/mine`, {
+          headers: getHeaders(),
+        });
+        return data.orders || [];
+      } catch {
+        return [];
+      }
+    },
+    admin: {
+      list: async (status?: string): Promise<SystemOrderItem[]> => {
+        try {
+          const params = status ? `?status=${encodeURIComponent(status)}` : "";
+          const data = await safeFetchJson(`${BACKEND_URL}/system-orders/admin${params}`, {
+            headers: getHeaders(),
+          });
+          return data.orders || [];
+        } catch {
+          return [];
+        }
+      },
+      update: (
+        orderId: string,
+        payload: {
+          status?: SystemOrderItem["status"];
+          quotedPrice?: number;
+          internalNotes?: string;
+        },
+      ): Promise<{ success: boolean; order: SystemOrderItem }> => {
+        return safeFetchJson(`${BACKEND_URL}/system-orders/admin/${orderId}`, {
+          method: "PATCH",
+          headers: getHeaders(),
+          body: JSON.stringify(payload),
+        });
+      },
+      reply: (
+        orderId: string,
+        message: string,
+      ): Promise<{ success: boolean; order: SystemOrderItem; sentTo: string }> => {
+        return safeFetchJson(`${BACKEND_URL}/system-orders/admin/${orderId}/reply`, {
+          method: "POST",
+          headers: getHeaders(),
+          body: JSON.stringify({ message }),
         });
       },
     },
@@ -1062,6 +1175,25 @@ export const api = {
     return data;
   },
 
+  getGoogleLoginUrl: async (): Promise<string> => {
+    const res = await fetch(`${BACKEND_URL}/auth/google/url`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Login com Google indisponível.");
+    return data.url;
+  },
+
+  handleGoogleCallback: async (code: string) => {
+    const data = await safeFetchJson(`${BACKEND_URL}/auth/google/callback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    });
+    if (data.token) {
+      localStorage.setItem("goat_auth_token", data.token);
+    }
+    return data;
+  },
+
   getMe: async (): Promise<UserProfile | null> => {
     try {
       const res = await fetch(`${BACKEND_URL}/auth/me`, { headers: getHeaders() });
@@ -1074,7 +1206,9 @@ export const api = {
   },
 
   getAiConfig: async (serverId: string): Promise<AiConfig> => {
-    const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/config`, { headers: getHeaders() });
+    const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/config`, {
+      headers: getHeaders(),
+    });
     return data.aiConfig;
   },
 
@@ -1089,7 +1223,9 @@ export const api = {
 
   getAiAnalyses: async (serverId: string): Promise<AiAnalysis[]> => {
     try {
-      const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/analyses`, { headers: getHeaders() });
+      const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/analyses`, {
+        headers: getHeaders(),
+      });
       return data.analyses || [];
     } catch {
       return [];
@@ -1098,11 +1234,12 @@ export const api = {
 
   getAiDecisions: async (serverId: string): Promise<AiDecision[]> => {
     try {
-      const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/decisions`, { headers: getHeaders() });
+      const data = await safeFetchJson(`${BACKEND_URL}/servers/${serverId}/ai/decisions`, {
+        headers: getHeaders(),
+      });
       return data.decisions || [];
     } catch {
       return [];
     }
   },
-
 };

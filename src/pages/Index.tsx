@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Nav } from "@/components/goatlanding/Nav";
 import { Hero } from "@/components/goatlanding/Hero";
+import { Services } from "@/components/goatlanding/Services";
 import { LiveDemo } from "@/components/goatlanding/LiveDemo";
 import { Features } from "@/components/goatlanding/Features";
 import { HowItWorks } from "@/components/goatlanding/HowItWorks";
@@ -13,11 +14,11 @@ type Copy = {
 };
 
 const pt: Copy = {
-  title: "Goat Network — Recursos premium pra servidores FiveM",
+  title: "Goat Network — Sistemas, apps e o Anticheat que sua cidade confia",
 };
 
 const en: Copy = {
-  title: "Goat Network — Premium resources for FiveM servers",
+  title: "Goat Network — Systems, apps and the Anticheat your city trusts",
 };
 
 export default function Index() {
@@ -32,6 +33,7 @@ export default function Index() {
     <main className="relative min-h-screen bg-background font-sans text-foreground">
       <Nav />
       <Hero />
+      <Services />
       <LiveDemo />
       <Pricing />
       <Features />

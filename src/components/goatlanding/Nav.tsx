@@ -8,11 +8,13 @@ import {
   LogOut,
   ArrowRight,
   Globe,
+  Briefcase,
 } from "lucide-react";
 import logo from "@/assets/goat-logo.png";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { MriButton } from "@/components/ui/MriButton";
+import { userAvatarUrl } from "@/lib/goat-api";
 
 const DISCORD_URL = "https://discord.gg/goatnetworkgg";
 
@@ -22,6 +24,7 @@ type Copy = {
   accountConnected: string;
   myServers: string;
   dashboard: string;
+  myOrders: string;
   myAccount: string;
   logout: string;
   getStarted: string;
@@ -32,6 +35,7 @@ type Copy = {
 const pt: Copy = {
   links: [
     { label: "Produtos", href: "/products", dropdown: false },
+    { label: "Sistemas sob encomenda", href: "/encomendar", dropdown: false },
     { label: "Changelog", href: "/changelog", dropdown: false },
     { label: "Empresa", href: "/empresa", dropdown: false },
     { label: "FAQ", href: "/#faq", dropdown: false },
@@ -40,6 +44,7 @@ const pt: Copy = {
   accountConnected: "Conta conectada",
   myServers: "Meus Servidores",
   dashboard: "Dashboard",
+  myOrders: "Minhas Encomendas",
   myAccount: "Minha Conta",
   logout: "Sair da conta",
   getStarted: "Começar agora",
@@ -50,6 +55,7 @@ const pt: Copy = {
 const en: Copy = {
   links: [
     { label: "Products", href: "/products", dropdown: false },
+    { label: "Custom Systems", href: "/encomendar", dropdown: false },
     { label: "Changelog", href: "/changelog", dropdown: false },
     { label: "Company", href: "/empresa", dropdown: false },
     { label: "FAQ", href: "/#faq", dropdown: false },
@@ -58,6 +64,7 @@ const en: Copy = {
   accountConnected: "Account connected",
   myServers: "My Servers",
   dashboard: "Dashboard",
+  myOrders: "My Orders",
   myAccount: "My Account",
   logout: "Log out",
   getStarted: "Get started",
@@ -72,6 +79,7 @@ export function Nav() {
   const [user, setUser] = useState<{
     username: string;
     avatar?: string;
+    avatarUrl?: string;
     discordId?: string;
   } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -104,6 +112,7 @@ export function Nav() {
       const token = params.get("token");
       const username = params.get("username");
       const avatar = params.get("avatar");
+      const avatarUrl = params.get("avatarUrl");
       const discordId = params.get("discordId");
 
       if (token) {
@@ -111,6 +120,7 @@ export function Nav() {
         const userData = {
           username: username || t.defaultUsername,
           avatar: avatar || undefined,
+          avatarUrl: avatarUrl || undefined,
           discordId: discordId || undefined,
         };
         localStorage.setItem("goat_user", JSON.stringify(userData));
@@ -221,9 +231,9 @@ export function Nav() {
                 className="gap-2 rounded-md border-hairline bg-surface-2 p-1 pr-2 backdrop-blur hover:bg-secondary"
               >
                 <div className="flex h-6 w-6 items-center justify-center overflow-hidden rounded bg-emerald-500/20 text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
-                  {user.avatar && user.discordId ? (
+                  {userAvatarUrl(user) ? (
                     <img
-                      src={`https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`}
+                      src={userAvatarUrl(user)!}
                       alt={user.username}
                       className="h-full w-full object-cover"
                       onError={(e) => {
@@ -279,6 +289,16 @@ export function Nav() {
                         <a href="/dashboard">
                           <LayoutDashboard className="h-4 w-4" />
                           {t.dashboard}
+                        </a>
+                      </MriButton>
+                      <MriButton
+                        asChild
+                        variant="ghost"
+                        className="w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-[12.5px] hover:bg-secondary"
+                      >
+                        <a href="/minhas-encomendas">
+                          <Briefcase className="h-4 w-4" />
+                          {t.myOrders}
                         </a>
                       </MriButton>
                       <MriButton
