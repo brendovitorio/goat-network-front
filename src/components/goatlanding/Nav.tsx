@@ -306,7 +306,7 @@ export function Nav() {
                         variant="ghost"
                         className="w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-[12.5px] hover:bg-secondary"
                       >
-                        <a href="/dashboard/configuracoes">
+                        <a href="/servers?tab=conta">
                           <User className="h-4 w-4" />
                           {t.myAccount}
                         </a>

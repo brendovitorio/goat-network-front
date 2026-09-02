@@ -24,13 +24,7 @@ import {
   Download,
 } from "lucide-react";
 import { Nav } from "@/components/goatlanding/Nav";
-import {
-  api,
-  ServerItem,
-  UserProfile,
-  DownloadableProduct,
-  discordAvatarUrl,
-} from "@/lib/goat-api";
+import { api, ServerItem, UserProfile, DownloadableProduct, userAvatarUrl } from "@/lib/goat-api";
 import { FaturasTab } from "@/components/dashboard/SettingsTabs";
 import { cn } from "@/lib/utils";
 import goatLoading from "@/assets/goatloading.png";
@@ -94,7 +88,8 @@ const pt: Copy = {
   tabAccount: "Minha Conta",
   support: "Suporte",
   serversTitle: "Meus Servidores",
-  serversSubtitle: "Gerencie suas licenças e acesse o painel de controle dos seus servidores FiveM.",
+  serversSubtitle:
+    "Gerencie suas licenças e acesse o painel de controle dos seus servidores FiveM.",
   searchPlaceholder: "Buscar servidor...",
   filters: "Filtros",
   newServer: "Novo Servidor",
@@ -122,7 +117,7 @@ const pt: Copy = {
   download: "Baixar",
   downloadErrorFallback: "Erro ao baixar arquivo.",
   accountTitle: "Minha Conta",
-  accountSubtitle: "Dados da sua conta, vinculados ao login via Discord.",
+  accountSubtitle: "Dados da sua conta na Goat Network.",
   loadingAccount: "Carregando conta...",
   accountLoadError: "Não foi possível carregar os dados da conta.",
   emailNotProvided: "E-mail não informado",
@@ -169,7 +164,7 @@ const en: Copy = {
   download: "Download",
   downloadErrorFallback: "Error downloading the file.",
   accountTitle: "My Account",
-  accountSubtitle: "Your account data, linked to your Discord login.",
+  accountSubtitle: "Your account data on Goat Network.",
   loadingAccount: "Loading account...",
   accountLoadError: "Could not load account data.",
   emailNotProvided: "No email provided",
@@ -434,7 +429,10 @@ export default function ServersPage() {
                       className="sm:w-64"
                     />
                     <div className="flex items-center gap-3">
-                      <MriButton variant="outline" className="h-10 rounded-md border-hairline bg-secondary px-4 text-sm hover:bg-secondary">
+                      <MriButton
+                        variant="outline"
+                        className="h-10 rounded-md border-hairline bg-secondary px-4 text-sm hover:bg-secondary"
+                      >
                         <Filter className="h-4 w-4" />
                         {t.filters}
                       </MriButton>
@@ -465,9 +463,7 @@ export default function ServersPage() {
                     <div className="h-16 w-16 rounded-full bg-secondary flex items-center justify-center mb-4">
                       <ServerIcon className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium text-foreground mb-2">
-                      {t.noServersFound}
-                    </h3>
+                    <h3 className="text-lg font-medium text-foreground mb-2">{t.noServersFound}</h3>
                     <p className="text-sm text-muted-foreground text-center max-w-md mb-6">
                       {search ? t.noServersMatch : t.noServersYet}
                     </p>
@@ -699,9 +695,9 @@ export default function ServersPage() {
                   <div className="max-w-2xl rounded-xl border border-hairline bg-black p-6 space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="h-16 w-16 rounded-full bg-secondary border border-hairline flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {discordAvatarUrl(me.discordId, me.avatar) ? (
+                        {userAvatarUrl(me) ? (
                           <img
-                            src={discordAvatarUrl(me.discordId, me.avatar)!}
+                            src={userAvatarUrl(me)!}
                             alt={me.username}
                             className="h-full w-full object-cover"
                           />
@@ -738,14 +734,16 @@ export default function ServersPage() {
                           {me.role}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground">
-                          {t.discordIdLabel}
-                        </p>
-                        <p className="mt-1.5 text-sm font-mono text-foreground/75">
-                          {me.discordId}
-                        </p>
-                      </div>
+                      {me.discordId && (
+                        <div>
+                          <p className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground">
+                            {t.discordIdLabel}
+                          </p>
+                          <p className="mt-1.5 text-sm font-mono text-foreground/75">
+                            {me.discordId}
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <p className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground">
                           {t.memberSince}
