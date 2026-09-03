@@ -1197,7 +1197,17 @@ export const api = {
   getMe: async (): Promise<UserProfile | null> => {
     try {
       const res = await fetch(`${BACKEND_URL}/auth/me`, { headers: getHeaders() });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        // 401 especificamente = o token salvo não é mais aceito pelo backend
+        // (sessão expirada/revogada) - diferente de uma falha de rede/500,
+        // que é transitória e não deve derrubar a sessão do usuário. Limpa
+        // aqui (não em cada chamador) pra cobrir os três lugares que usam
+        // getMe() de uma vez só.
+        if (res.status === 401) {
+          localStorage.removeItem("goat_auth_token");
+        }
+        return null;
+      }
       const data = await res.json();
       return data.user ? { ...data.user, isCeo: Boolean(data.isCeo) } : null;
     } catch {

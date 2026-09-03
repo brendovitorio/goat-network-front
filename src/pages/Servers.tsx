@@ -274,6 +274,14 @@ export default function ServersPage() {
     });
 
     api.getMe().then((profile) => {
+      // getMe() limpa o token do localStorage sozinho quando o backend
+      // recusa com 401 (sessão expirada/revogada) - se ele sumiu depois
+      // dessa chamada, era exatamente isso: manda pra tela de login em vez
+      // de deixar a página meio logada, meio não.
+      if (!profile && !localStorage.getItem("goat_auth_token")) {
+        navigate("/auth");
+        return;
+      }
       setMe(profile);
       setMeLoading(false);
     });
