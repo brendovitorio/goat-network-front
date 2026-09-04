@@ -44,6 +44,19 @@ export type ServerItem = {
   anticheatConfig?: any;
 };
 
+export type ServerProductDashboard = {
+  server: { _id: string; name: string; ip: string; port: number; plan: string; status: string };
+  product: { name: string | null; slug: string | null };
+  license: { key: string; status: string; expiresAt: string } | null;
+  deployment: {
+    buildId: string | null;
+    resourceVersion: string | null;
+    lastSeen: string;
+    online: boolean;
+  } | null;
+  download: { type: "auto" | "legacy" | "none"; url: string | null; planCode: string | null };
+};
+
 export type ProductItem = {
   _id?: string;
   slug: string;
@@ -464,6 +477,12 @@ export const api = {
     } catch {
       return null;
     }
+  },
+
+  getServerProductDashboard: async (serverId: string): Promise<ServerProductDashboard> => {
+    return safeFetchJson(`${BACKEND_URL}/servers/${serverId}/product-dashboard`, {
+      headers: getHeaders(),
+    });
   },
 
   getCfxServerData: async (code: string): Promise<any> => {

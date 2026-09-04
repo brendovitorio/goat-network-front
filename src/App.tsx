@@ -9,6 +9,7 @@ import MyOrders from "./pages/MyOrders.tsx";
 import Terms from "./pages/Terms.tsx";
 import Privacy from "./pages/Privacy.tsx";
 import Servers from "./pages/Servers.tsx";
+import ProductDashboard from "./pages/ProductDashboard.tsx";
 import Auth from "./pages/Auth.tsx";
 import Checkout from "./pages/Checkout.tsx";
 import Ceo from "./pages/Ceo.tsx";
@@ -35,6 +36,7 @@ function App() {
             <Route path="/termos" element={<Terms />} />
             <Route path="/privacidade" element={<Privacy />} />
             <Route path="/servers" element={<Servers />} />
+            <Route path="/product/:serverId" element={<ProductDashboard />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/ceo" element={<Ceo />} />

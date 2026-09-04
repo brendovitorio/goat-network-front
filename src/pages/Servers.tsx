@@ -105,7 +105,7 @@ const pt: Copy = {
   currentPlan: "Plano Atual",
   loadingPlayers: "Carregando...",
   accessDashboard: "Acessar Dashboard",
-  viewDownloads: "Ver Downloads",
+  viewDownloads: "Abrir produto",
   invoicesTitle: "Faturas",
   invoicesSubtitle: "Histórico de pedidos e pagamentos da sua conta.",
   loadingInvoices: "Carregando faturas...",
@@ -152,7 +152,7 @@ const en: Copy = {
   currentPlan: "Current Plan",
   loadingPlayers: "Loading...",
   accessDashboard: "Open Dashboard",
-  viewDownloads: "View Downloads",
+  viewDownloads: "Open product",
   invoicesTitle: "Invoices",
   invoicesSubtitle: "Order and payment history for your account.",
   loadingInvoices: "Loading invoices...",
@@ -513,7 +513,7 @@ export default function ServersPage() {
                             exit={{ opacity: 0, scale: 0.98 }}
                             onClick={() => {
                               if (!hasDashboard) {
-                                setActiveTab("downloads");
+                                navigate(`/product/${server._id}`);
                                 return;
                               }
                               localStorage.setItem("goat_active_server_id", server._id);
