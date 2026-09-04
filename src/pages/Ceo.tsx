@@ -23,6 +23,7 @@ import {
   Briefcase,
   Send,
   Mail,
+  Archive,
 } from "lucide-react";
 import { Nav } from "@/components/goatlanding/Nav";
 import { MriTabs } from "@/components/ui/MriTabs";
@@ -34,6 +35,7 @@ import {
   CouponItem,
   AdminLicenseSearchResult,
   SystemOrderItem,
+  SourcePackageItem,
   productLogoUrl,
 } from "@/lib/goat-api";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -65,6 +67,9 @@ type Copy = {
     descriptionPlaceholder: string;
     logoLabel: string;
     logoHint: string;
+    protectionKeyLabel: string;
+    protectionKeyHint: string;
+    protectionKeyNone: string;
     submitIdle: string;
     submitBusy: string;
   };
@@ -95,6 +100,21 @@ type Copy = {
     fileHint: string;
     submitIdle: string;
     submitBusy: string;
+  };
+  sourcePackages: {
+    heading: string;
+    description: string;
+    productLabel: string;
+    fileLabel: string;
+    fileHint: string;
+    submitIdle: string;
+    submitBusy: string;
+    listHeading: string;
+    empty: string;
+    colProduct: string;
+    colFile: string;
+    colUploadedAt: string;
+    colUploadedBy: string;
   };
   grants: {
     heading: string;
@@ -286,6 +306,11 @@ type Copy = {
     replyMessageRequired: string;
     replySent: (email: string) => string;
     replyOrderError: string;
+    selectProductFirstSp: string;
+    chooseFileFirstSp: string;
+    fileTooBigSp: string;
+    packageUploaded: (product: string) => string;
+    uploadPackageError: string;
   };
 };
 
@@ -313,6 +338,10 @@ const pt: Copy = {
     descriptionPlaceholder: "Descrição curta do produto",
     logoLabel: "Logo (opcional — PNG/JPG/WEBP/SVG, até 1MB)",
     logoHint: "Se não enviar, o produto usa a logo padrão da Goat Network (a mesma do favicon).",
+    protectionKeyLabel: "Identificador de proteção (interno)",
+    protectionKeyHint:
+      "Não aparece no site nem pro cliente - só liga esse produto ao resource GOAT correspondente, pra proteção automática e entrega gerarem o build certo na compra.",
+    protectionKeyNone: "Nenhum (produto sem proteção automática)",
     submitIdle: "Criar produto",
     submitBusy: "Criando...",
   },
@@ -343,6 +372,22 @@ const pt: Copy = {
     fileHint: 'Depois de comprado, esse arquivo aparece na aba "Downloads" do cliente.',
     submitIdle: "Criar plano",
     submitBusy: "Criando na Stripe...",
+  },
+  sourcePackages: {
+    heading: "Fonte puro (proteção automática)",
+    description:
+      "Sobe o código-fonte ABERTO (sem proteção) de um resource GOAT. Um upload novo substitui o anterior do mesmo identificador - vendas já entregues não mudam retroativamente, só as próximas.",
+    productLabel: "Resource *",
+    fileLabel: "Arquivo do fonte (.zip, até 50MB)",
+    fileHint: "Zipa a pasta do resource sem .git/node_modules/dist antes de subir.",
+    submitIdle: "Subir fonte",
+    submitBusy: "Enviando...",
+    listHeading: "Fontes já cadastrados",
+    empty: "Nenhum fonte cadastrado ainda.",
+    colProduct: "Resource",
+    colFile: "Arquivo",
+    colUploadedAt: "Enviado em",
+    colUploadedBy: "Enviado por",
   },
   grants: {
     heading: "Liberar de graça",
@@ -561,6 +606,11 @@ const pt: Copy = {
     replyMessageRequired: "Escreva uma mensagem antes de enviar.",
     replySent: (email) => `Resposta enviada pra ${email}.`,
     replyOrderError: "Erro ao enviar resposta por e-mail.",
+    selectProductFirstSp: "Selecione o resource.",
+    chooseFileFirstSp: "Escolha o arquivo .zip do fonte primeiro.",
+    fileTooBigSp: "Arquivo maior que o limite de 50MB.",
+    packageUploaded: (product) => `Fonte de "${product}" enviado e criptografado com sucesso.`,
+    uploadPackageError: "Erro ao enviar o fonte.",
   },
 };
 
@@ -589,6 +639,10 @@ const en: Copy = {
     logoLabel: "Logo (optional — PNG/JPG/WEBP/SVG, up to 1MB)",
     logoHint:
       "If you don't upload one, the product uses the default Goat Network logo (same as the favicon).",
+    protectionKeyLabel: "Protection identifier (internal)",
+    protectionKeyHint:
+      "Not shown on the site or to customers - just links this product to the matching GOAT resource, so automatic protection and delivery generate the right build on purchase.",
+    protectionKeyNone: "None (product has no automatic protection)",
     submitIdle: "Create product",
     submitBusy: "Creating...",
   },
@@ -619,6 +673,22 @@ const en: Copy = {
     fileHint: 'Once purchased, this file shows up in the customer\'s "Downloads" tab.',
     submitIdle: "Create plan",
     submitBusy: "Creating on Stripe...",
+  },
+  sourcePackages: {
+    heading: "Raw source (automatic protection)",
+    description:
+      "Uploads the OPEN (unprotected) source code of a GOAT resource. A new upload replaces the previous one for the same identifier - already-delivered sales aren't changed retroactively, only future ones.",
+    productLabel: "Resource *",
+    fileLabel: "Source file (.zip, up to 50MB)",
+    fileHint: "Zip the resource folder without .git/node_modules/dist before uploading.",
+    submitIdle: "Upload source",
+    submitBusy: "Uploading...",
+    listHeading: "Sources already on file",
+    empty: "No source uploaded yet.",
+    colProduct: "Resource",
+    colFile: "File",
+    colUploadedAt: "Uploaded at",
+    colUploadedBy: "Uploaded by",
   },
   grants: {
     heading: "Grant for free",
@@ -838,6 +908,11 @@ const en: Copy = {
     replyMessageRequired: "Write a message before sending.",
     replySent: (email) => `Reply sent to ${email}.`,
     replyOrderError: "Error sending email reply.",
+    selectProductFirstSp: "Select the resource.",
+    chooseFileFirstSp: "Choose the source .zip file first.",
+    fileTooBigSp: "File is bigger than the 50MB limit.",
+    packageUploaded: (product) => `Source for "${product}" uploaded and encrypted successfully.`,
+    uploadPackageError: "Error uploading the source.",
   },
 };
 
@@ -849,7 +924,10 @@ const emptyProductForm = {
   description: "",
   type: "anticheat" as "anticheat" | "download",
   sortOrder: "0",
+  protectionKey: "" as "" | "legal" | "mdt" | "groups" | "anticheat",
 };
+
+const PROTECTABLE_RESOURCES = ["legal", "mdt", "groups", "anticheat"] as const;
 
 const emptyPlanForm = {
   productSlug: "",
@@ -900,6 +978,13 @@ export default function CeoPage() {
   const [creatingPlan, setCreatingPlan] = useState(false);
   const [planForm, setPlanForm] = useState(emptyPlanForm);
   const [productFile, setProductFile] = useState<File | null>(null);
+
+  const [sourcePackages, setSourcePackages] = useState<SourcePackageItem[]>([]);
+  const [spProduct, setSpProduct] = useState<(typeof PROTECTABLE_RESOURCES)[number]>(
+    PROTECTABLE_RESOURCES[0],
+  );
+  const [spFile, setSpFile] = useState<File | null>(null);
+  const [uploadingSp, setUploadingSp] = useState(false);
 
   const [priceEdits, setPriceEdits] = useState<Record<string, string>>({});
   const [busyCode, setBusyCode] = useState<string | null>(null);
@@ -975,16 +1060,19 @@ export default function CeoPage() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [productsData, plansData, couponsData, systemOrdersData] = await Promise.all([
-        api.admin.products.getProducts(),
-        api.admin.getPlans(),
-        api.admin.coupons.list(),
-        api.systemOrders.admin.list(),
-      ]);
+      const [productsData, plansData, couponsData, systemOrdersData, sourcePackagesData] =
+        await Promise.all([
+          api.admin.products.getProducts(),
+          api.admin.getPlans(),
+          api.admin.coupons.list(),
+          api.systemOrders.admin.list(),
+          api.admin.sourcePackages.list(),
+        ]);
       setProducts(productsData);
       setPlans(plansData);
       setCoupons(couponsData);
       setSystemOrders(systemOrdersData);
+      setSourcePackages(sourcePackagesData);
       if (!planForm.productSlug && productsData.length > 0) {
         setPlanForm((f) => ({ ...f, productSlug: productsData[0].slug }));
       }
@@ -1070,6 +1158,7 @@ export default function CeoPage() {
         type: productForm.type,
         sortOrder: Number(productForm.sortOrder) || 0,
         logoBase64,
+        protectionKey: productForm.protectionKey || undefined,
       });
       setMsg({ type: "success", text: t.messages.productCreated });
       setProductForm(emptyProductForm);
@@ -1128,6 +1217,39 @@ export default function CeoPage() {
       setMsg({ type: "error", text: err.message || t.messages.createPlanError });
     } finally {
       setCreatingPlan(false);
+    }
+  };
+
+  const handleUploadSourcePackage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsg(null);
+    if (!spProduct) {
+      setMsg({ type: "error", text: t.messages.selectProductFirstSp });
+      return;
+    }
+    if (!spFile) {
+      setMsg({ type: "error", text: t.messages.chooseFileFirstSp });
+      return;
+    }
+    if (spFile.size > 50 * 1024 * 1024) {
+      setMsg({ type: "error", text: t.messages.fileTooBigSp });
+      return;
+    }
+    setUploadingSp(true);
+    try {
+      const zipBase64 = await readFileAsBase64(spFile);
+      await api.admin.sourcePackages.upload({
+        product: spProduct,
+        filename: spFile.name,
+        zipBase64,
+      });
+      setMsg({ type: "success", text: t.messages.packageUploaded(spProduct) });
+      setSpFile(null);
+      await loadAll();
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.uploadPackageError });
+    } finally {
+      setUploadingSp(false);
     }
   };
 
@@ -1626,6 +1748,25 @@ export default function CeoPage() {
                   <option value="download">{t.newProduct.typeDownload}</option>
                 </select>
               </Field>
+              <Field label={t.newProduct.protectionKeyLabel}>
+                <select
+                  value={productForm.protectionKey}
+                  onChange={(e) =>
+                    setProductForm({ ...productForm, protectionKey: e.target.value as any })
+                  }
+                  className={inputClass}
+                >
+                  <option value="">{t.newProduct.protectionKeyNone}</option>
+                  {PROTECTABLE_RESOURCES.map((key) => (
+                    <option key={key} value={key}>
+                      {key}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1.5 text-[10.5px] text-muted-foreground/70">
+                  {t.newProduct.protectionKeyHint}
+                </p>
+              </Field>
               <div className="sm:col-span-2">
                 <Field label={t.newProduct.descriptionLabel}>
                   <MriInput
@@ -1827,6 +1968,100 @@ export default function CeoPage() {
             >
               {creatingPlan ? t.newPlan.submitBusy : t.newPlan.submitIdle}
             </MriButton>
+          </motion.form>
+
+          {/* Subir fonte puro (proteção automática) */}
+          <motion.form
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            onSubmit={handleUploadSourcePackage}
+            className={
+              activeTab === "catalog"
+                ? "mt-6 rounded-2xl border border-border/50 bg-card/40 p-8"
+                : "hidden"
+            }
+          >
+            <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Archive className="h-4 w-4" /> {t.sourcePackages.heading}
+            </h2>
+            <p className="mt-1 text-[11.5px] text-muted-foreground">
+              {t.sourcePackages.description}
+            </p>
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label={t.sourcePackages.productLabel}>
+                <select
+                  value={spProduct}
+                  onChange={(e) => setSpProduct(e.target.value as (typeof PROTECTABLE_RESOURCES)[number])}
+                  className={inputClass}
+                >
+                  {PROTECTABLE_RESOURCES.map((key) => (
+                    <option key={key} value={key}>
+                      {key}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label={t.sourcePackages.fileLabel}>
+                <input
+                  type="file"
+                  accept=".zip"
+                  onChange={(e) => setSpFile(e.target.files?.[0] || null)}
+                  className="w-full rounded-xl border border-dashed border-border bg-background/50 px-4 py-3 text-[12.5px] text-muted-foreground outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-[12px] file:font-medium file:text-foreground"
+                />
+                {spFile && (
+                  <p className="mt-1.5 text-[11px] text-muted-foreground">
+                    {spFile.name} ({(spFile.size / 1024 / 1024).toFixed(2)}MB)
+                  </p>
+                )}
+                <p className="mt-1.5 text-[10.5px] text-muted-foreground/70">
+                  {t.sourcePackages.fileHint}
+                </p>
+              </Field>
+            </div>
+            <MriButton
+              variant="ghost"
+              type="submit"
+              disabled={uploadingSp}
+              className="mt-6 rounded-xl bg-foreground px-5 py-3 text-[13px] text-background transition-transform hover:scale-[1.02] hover:bg-foreground active:scale-[0.98]"
+            >
+              {uploadingSp ? t.sourcePackages.submitBusy : t.sourcePackages.submitIdle}
+            </MriButton>
+
+            <div className="mt-8 border-t border-border/50 pt-6">
+              <h3 className="text-[12.5px] font-semibold text-foreground">
+                {t.sourcePackages.listHeading}
+              </h3>
+              {sourcePackages.length === 0 ? (
+                <p className="mt-2 text-[12px] text-muted-foreground">{t.sourcePackages.empty}</p>
+              ) : (
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full text-left text-[12px]">
+                    <thead>
+                      <tr className="text-muted-foreground/70">
+                        <th className="pb-2 pr-4 font-medium">{t.sourcePackages.colProduct}</th>
+                        <th className="pb-2 pr-4 font-medium">{t.sourcePackages.colFile}</th>
+                        <th className="pb-2 pr-4 font-medium">{t.sourcePackages.colUploadedAt}</th>
+                        <th className="pb-2 font-medium">{t.sourcePackages.colUploadedBy}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sourcePackages.map((sp) => (
+                        <tr key={sp.product} className="border-t border-border/30">
+                          <td className="py-2 pr-4 font-medium text-foreground">{sp.product}</td>
+                          <td className="py-2 pr-4 text-muted-foreground">{sp.filename}</td>
+                          <td className="py-2 pr-4 text-muted-foreground">
+                            {formatDate(sp.uploadedAt)}
+                          </td>
+                          <td className="py-2 text-muted-foreground">
+                            {sp.uploadedByDiscordId || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </motion.form>
 
           {/* Liberar produto de graça */}

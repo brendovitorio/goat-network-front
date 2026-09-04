@@ -53,6 +53,8 @@ export type ProductItem = {
   logoUrl?: string;
   sortOrder: number;
   active?: boolean;
+  // Interno, nunca vem na listagem pública (/products) - só em /products/admin.
+  protectionKey?: "" | "legal" | "mdt" | "groups" | "anticheat";
   plans?: PlanItem[];
   createdAt?: string;
   updatedAt?: string;
@@ -124,6 +126,13 @@ export type PlanItem = {
 };
 
 export type DownloadableProduct = { code: string; name: string; downloadFileName: string };
+
+export type SourcePackageItem = {
+  product: string;
+  filename: string;
+  uploadedAt: string;
+  uploadedByDiscordId?: string;
+};
 
 export type CouponItem = {
   _id?: string;
@@ -413,6 +422,7 @@ const safeFetchJson = async (url: string, options?: RequestInit) => {
     const lang = getApiLang();
     const err = new Error(
       data.error ||
+        data.message ||
         (lang === "en"
           ? `Error ${res.status}: Could not process the request.`
           : `Erro ${res.status}: Não foi possível processar a requisição.`),
@@ -617,6 +627,7 @@ export const api = {
         slug?: string;
         sortOrder?: number;
         logoBase64?: string;
+        protectionKey?: "" | "legal" | "mdt" | "groups" | "anticheat";
       }): Promise<{ success: boolean; product: ProductItem }> => {
         return safeFetchJson(`${BACKEND_URL}/products/admin`, {
           method: "POST",
@@ -626,10 +637,31 @@ export const api = {
       },
       updateProduct: async (
         slug: string,
-        payload: Partial<Pick<ProductItem, "name" | "description" | "sortOrder" | "active">>,
+        payload: Partial<
+          Pick<ProductItem, "name" | "description" | "sortOrder" | "active" | "protectionKey">
+        >,
       ): Promise<{ success: boolean; product: ProductItem }> => {
         return safeFetchJson(`${BACKEND_URL}/products/admin/${slug}`, {
           method: "PATCH",
+          headers: getHeaders(),
+          body: JSON.stringify(payload),
+        });
+      },
+    },
+    sourcePackages: {
+      list: async (): Promise<SourcePackageItem[]> => {
+        const data = await safeFetchJson(`${BACKEND_URL}/admin/source-packages`, {
+          headers: getHeaders(),
+        });
+        return data.packages || [];
+      },
+      upload: async (payload: {
+        product: string;
+        filename?: string;
+        zipBase64: string;
+      }): Promise<{ ok: boolean; product: string; sizeBytes: number }> => {
+        return safeFetchJson(`${BACKEND_URL}/admin/source-packages`, {
+          method: "POST",
           headers: getHeaders(),
           body: JSON.stringify(payload),
         });
