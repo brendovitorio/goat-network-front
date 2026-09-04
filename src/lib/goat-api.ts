@@ -647,7 +647,16 @@ export const api = {
           body: JSON.stringify(payload),
         });
       },
-      deleteProduct: async (slug: string): Promise<{ success: boolean }> => {
+      getDeleteImpact: async (
+        slug: string,
+      ): Promise<{ plans: number; orders: number; licenses: number; servers: number }> => {
+        return safeFetchJson(`${BACKEND_URL}/products/admin/${slug}/impact`, {
+          headers: getHeaders(),
+        });
+      },
+      deleteProduct: async (
+        slug: string,
+      ): Promise<{ success: boolean; plans: number; orders: number; licenses: number; servers: number }> => {
         return safeFetchJson(`${BACKEND_URL}/products/admin/${slug}`, {
           method: "DELETE",
           headers: getHeaders(),
@@ -735,10 +744,18 @@ export const api = {
         headers: getHeaders(),
       });
     },
+    getPlanDeleteImpact: async (
+      productSlug: string,
+      key: string,
+    ): Promise<{ orders: number; licenses: number; servers: number }> => {
+      return safeFetchJson(`${BACKEND_URL}/plans/admin/${productSlug}/${key}/impact`, {
+        headers: getHeaders(),
+      });
+    },
     deletePlanPermanently: async (
       productSlug: string,
       key: string,
-    ): Promise<{ success: boolean }> => {
+    ): Promise<{ success: boolean; orders: number; licenses: number; servers: number }> => {
       return safeFetchJson(`${BACKEND_URL}/plans/admin/${productSlug}/${key}/permanent`, {
         method: "DELETE",
         headers: getHeaders(),

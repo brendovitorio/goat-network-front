@@ -314,11 +314,18 @@ type Copy = {
     fileTooBigSp: string;
     packageUploaded: (product: string) => string;
     uploadPackageError: string;
-    confirmDeleteProduct: (name: string) => string;
-    productDeleted: string;
+    confirmDeleteProduct: (
+      name: string,
+      impact: { plans: number; orders: number; licenses: number; servers: number },
+    ) => string;
+    productDeleted: (impact: { orders: number; licenses: number; servers: number }) => string;
     deleteProductError: string;
-    confirmDeletePlanPermanently: (code: string) => string;
-    planDeletedPermanently: string;
+    loadImpactError: string;
+    confirmDeletePlanPermanently: (
+      code: string,
+      impact: { orders: number; licenses: number; servers: number },
+    ) => string;
+    planDeletedPermanently: (impact: { orders: number; licenses: number; servers: number }) => string;
     deletePlanPermanentlyError: string;
     confirmDeleteCoupon: (code: string) => string;
     couponDeleted: string;
@@ -626,13 +633,16 @@ const pt: Copy = {
     fileTooBigSp: "Arquivo maior que o limite de 50MB.",
     packageUploaded: (product) => `Fonte de "${product}" enviado e criptografado com sucesso.`,
     uploadPackageError: "Erro ao enviar o fonte.",
-    confirmDeleteProduct: (name) =>
-      `Excluir o produto '${name}' de vez? Só funciona se ele não tiver nenhum plano cadastrado. Isso não pode ser desfeito.`,
-    productDeleted: "Produto excluído.",
+    confirmDeleteProduct: (name, impact) =>
+      `Excluir o produto '${name}' de vez? Isso apaga ${impact.plans} plano(s), ${impact.orders} pedido(s), ${impact.licenses} licença(s) e ${impact.servers} servidor(es) de cliente - inclusive cancela assinatura Stripe ainda ativa. Fica como se o produto nunca tivesse existido. Isso não pode ser desfeito.`,
+    productDeleted: (impact) =>
+      `Produto excluído. Também foram apagados: ${impact.orders} pedido(s), ${impact.licenses} licença(s), ${impact.servers} servidor(es).`,
     deleteProductError: "Erro ao excluir produto.",
-    confirmDeletePlanPermanently: (code) =>
-      `Excluir o plano '${code}' de vez (não é arquivar)? Só funciona se ele nunca teve pedido/licença. Isso não pode ser desfeito.`,
-    planDeletedPermanently: "Plano excluído permanentemente.",
+    loadImpactError: "Erro ao calcular o impacto da exclusão - tente de novo.",
+    confirmDeletePlanPermanently: (code, impact) =>
+      `Excluir o plano '${code}' de vez (não é arquivar)? Isso apaga ${impact.orders} pedido(s), ${impact.licenses} licença(s) e ${impact.servers} servidor(es) de cliente - inclusive cancela assinatura Stripe ainda ativa. Fica como se o plano nunca tivesse existido. Isso não pode ser desfeito.`,
+    planDeletedPermanently: (impact) =>
+      `Plano excluído. Também foram apagados: ${impact.orders} pedido(s), ${impact.licenses} licença(s), ${impact.servers} servidor(es).`,
     deletePlanPermanentlyError: "Erro ao excluir plano.",
     confirmDeleteCoupon: (code) => `Excluir o cupom '${code}' de vez? Isso não pode ser desfeito.`,
     couponDeleted: "Cupom excluído.",
@@ -942,13 +952,16 @@ const en: Copy = {
     fileTooBigSp: "File is bigger than the 50MB limit.",
     packageUploaded: (product) => `Source for "${product}" uploaded and encrypted successfully.`,
     uploadPackageError: "Error uploading the source.",
-    confirmDeleteProduct: (name) =>
-      `Permanently delete the product '${name}'? Only works if it has no plans registered. This can't be undone.`,
-    productDeleted: "Product deleted.",
+    confirmDeleteProduct: (name, impact) =>
+      `Permanently delete the product '${name}'? This wipes ${impact.plans} plan(s), ${impact.orders} order(s), ${impact.licenses} license(s) and ${impact.servers} customer server(s) - including canceling any still-active Stripe subscription. It'll be as if the product never existed. This can't be undone.`,
+    productDeleted: (impact) =>
+      `Product deleted. Also wiped: ${impact.orders} order(s), ${impact.licenses} license(s), ${impact.servers} server(s).`,
     deleteProductError: "Error deleting product.",
-    confirmDeletePlanPermanently: (code) =>
-      `Permanently delete the plan '${code}' (not just archive)? Only works if it never had an order/license. This can't be undone.`,
-    planDeletedPermanently: "Plan permanently deleted.",
+    loadImpactError: "Error calculating the deletion's impact - try again.",
+    confirmDeletePlanPermanently: (code, impact) =>
+      `Permanently delete the plan '${code}' (not just archive)? This wipes ${impact.orders} order(s), ${impact.licenses} license(s) and ${impact.servers} customer server(s) - including canceling any still-active Stripe subscription. It'll be as if the plan never existed. This can't be undone.`,
+    planDeletedPermanently: (impact) =>
+      `Plan deleted. Also wiped: ${impact.orders} order(s), ${impact.licenses} license(s), ${impact.servers} server(s).`,
     deletePlanPermanentlyError: "Error deleting plan.",
     confirmDeleteCoupon: (code) => `Permanently delete the coupon '${code}'? This can't be undone.`,
     couponDeleted: "Coupon deleted.",
@@ -1436,12 +1449,23 @@ export default function CeoPage() {
   };
 
   const handleDeleteProduct = async (product: ProductItem) => {
-    if (!window.confirm(t.messages.confirmDeleteProduct(product.name))) return;
     setBusyCode(product.slug);
     setMsg(null);
+    let impact;
     try {
-      await api.admin.products.deleteProduct(product.slug);
-      setMsg({ type: "success", text: t.messages.productDeleted });
+      impact = await api.admin.products.getDeleteImpact(product.slug);
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.loadImpactError });
+      setBusyCode(null);
+      return;
+    }
+    if (!window.confirm(t.messages.confirmDeleteProduct(product.name, impact))) {
+      setBusyCode(null);
+      return;
+    }
+    try {
+      const result = await api.admin.products.deleteProduct(product.slug);
+      setMsg({ type: "success", text: t.messages.productDeleted(result) });
       await loadAll();
     } catch (err: any) {
       setMsg({ type: "error", text: err.message || t.messages.deleteProductError });
@@ -1451,12 +1475,23 @@ export default function CeoPage() {
   };
 
   const handleDeletePlanPermanently = async (plan: PlanItem) => {
-    if (!window.confirm(t.messages.confirmDeletePlanPermanently(plan.code))) return;
     setBusyCode(plan.code);
     setMsg(null);
+    let impact;
     try {
-      await api.admin.deletePlanPermanently(plan.productSlug, plan.key);
-      setMsg({ type: "success", text: t.messages.planDeletedPermanently });
+      impact = await api.admin.getPlanDeleteImpact(plan.productSlug, plan.key);
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.loadImpactError });
+      setBusyCode(null);
+      return;
+    }
+    if (!window.confirm(t.messages.confirmDeletePlanPermanently(plan.code, impact))) {
+      setBusyCode(null);
+      return;
+    }
+    try {
+      const result = await api.admin.deletePlanPermanently(plan.productSlug, plan.key);
+      setMsg({ type: "success", text: t.messages.planDeletedPermanently(result) });
       await loadAll();
     } catch (err: any) {
       setMsg({ type: "error", text: err.message || t.messages.deletePlanPermanentlyError });
