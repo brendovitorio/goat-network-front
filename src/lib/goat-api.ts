@@ -706,6 +706,15 @@ export const api = {
           body: JSON.stringify(payload),
         });
       },
+      delete: async (product: string): Promise<{ ok: boolean; product: string }> => {
+        return safeFetchJson(
+          `${BACKEND_URL}/admin/source-packages/${encodeURIComponent(product)}`,
+          {
+            method: "DELETE",
+            headers: getHeaders(),
+          },
+        );
+      },
     },
     getPlans: async (): Promise<PlanItem[]> => {
       const data = await safeFetchJson(`${BACKEND_URL}/plans/admin`, { headers: getHeaders() });

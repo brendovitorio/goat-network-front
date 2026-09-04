@@ -115,6 +115,12 @@ type Copy = {
     colFile: string;
     colUploadedAt: string;
     colUploadedBy: string;
+    colActions: string;
+    deleteButton: string;
+    deleting: string;
+    confirmDelete: (product: string) => string;
+    deleteSuccess: (product: string) => string;
+    deleteError: string;
   };
   grants: {
     heading: string;
@@ -414,6 +420,13 @@ const pt: Copy = {
     colFile: "Arquivo",
     colUploadedAt: "Enviado em",
     colUploadedBy: "Enviado por",
+    colActions: "",
+    deleteButton: "Excluir",
+    deleting: "Excluindo...",
+    confirmDelete: (product) =>
+      `Excluir o fonte de '${product}'? Isso NÃO afeta builds já entregues, mas nenhuma venda nova desse resource vai gerar proteção automática até subir um fonte novo.`,
+    deleteSuccess: (product) => `Fonte de '${product}' excluído.`,
+    deleteError: "Erro ao excluir o fonte.",
   },
   grants: {
     heading: "Liberar de graça",
@@ -735,6 +748,13 @@ const en: Copy = {
     colFile: "File",
     colUploadedAt: "Uploaded at",
     colUploadedBy: "Uploaded by",
+    colActions: "",
+    deleteButton: "Delete",
+    deleting: "Deleting...",
+    confirmDelete: (product) =>
+      `Delete the source for '${product}'? This does NOT affect already-delivered builds, but no new sale of this resource will get automatic protection until you upload a new source.`,
+    deleteSuccess: (product) => `Source for '${product}' deleted.`,
+    deleteError: "Error deleting the source.",
   },
   grants: {
     heading: "Grant for free",
@@ -1051,6 +1071,7 @@ export default function CeoPage() {
   );
   const [spFile, setSpFile] = useState<File | null>(null);
   const [uploadingSp, setUploadingSp] = useState(false);
+  const [deletingSpProduct, setDeletingSpProduct] = useState<string | null>(null);
 
   const [priceEdits, setPriceEdits] = useState<Record<string, string>>({});
   const [busyCode, setBusyCode] = useState<string | null>(null);
@@ -1316,6 +1337,21 @@ export default function CeoPage() {
       setMsg({ type: "error", text: err.message || t.messages.uploadPackageError });
     } finally {
       setUploadingSp(false);
+    }
+  };
+
+  const handleDeleteSourcePackage = async (product: string) => {
+    if (!window.confirm(t.sourcePackages.confirmDelete(product))) return;
+    setDeletingSpProduct(product);
+    setMsg(null);
+    try {
+      await api.admin.sourcePackages.delete(product);
+      setMsg({ type: "success", text: t.sourcePackages.deleteSuccess(product) });
+      setSourcePackages((prev) => prev.filter((sp) => sp.product !== product));
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.sourcePackages.deleteError });
+    } finally {
+      setDeletingSpProduct(null);
     }
   };
 
@@ -2177,7 +2213,8 @@ export default function CeoPage() {
                         <th className="pb-2 pr-4 font-medium">{t.sourcePackages.colProduct}</th>
                         <th className="pb-2 pr-4 font-medium">{t.sourcePackages.colFile}</th>
                         <th className="pb-2 pr-4 font-medium">{t.sourcePackages.colUploadedAt}</th>
-                        <th className="pb-2 font-medium">{t.sourcePackages.colUploadedBy}</th>
+                        <th className="pb-2 pr-4 font-medium">{t.sourcePackages.colUploadedBy}</th>
+                        <th className="pb-2 font-medium">{t.sourcePackages.colActions}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2188,8 +2225,22 @@ export default function CeoPage() {
                           <td className="py-2 pr-4 text-muted-foreground">
                             {formatDate(sp.uploadedAt)}
                           </td>
-                          <td className="py-2 text-muted-foreground">
+                          <td className="py-2 pr-4 text-muted-foreground">
                             {sp.uploadedByDiscordId || "—"}
+                          </td>
+                          <td className="py-2">
+                            <MriButton
+                              variant="danger-outline"
+                              type="button"
+                              disabled={deletingSpProduct === sp.product}
+                              onClick={() => handleDeleteSourcePackage(sp.product)}
+                              className="border-red-500/30 bg-red-500/5 px-2.5 py-1 text-[11px] hover:bg-red-500/10"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              {deletingSpProduct === sp.product
+                                ? t.sourcePackages.deleting
+                                : t.sourcePackages.deleteButton}
+                            </MriButton>
                           </td>
                         </tr>
                       ))}
