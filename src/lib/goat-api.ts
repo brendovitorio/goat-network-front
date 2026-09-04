@@ -1271,6 +1271,20 @@ export const api = {
     return data;
   },
 
+  getDiscordLinkUrl: async (): Promise<string> => {
+    const res = await fetch(`${BACKEND_URL}/auth/discord/url?state=discord_link`);
+    const data = await res.json();
+    return data.url;
+  },
+
+  linkDiscordCallback: async (code: string) => {
+    return safeFetchJson(`${BACKEND_URL}/auth/discord/link-callback`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify({ code }),
+    });
+  },
+
   getGoogleLoginUrl: async (): Promise<string> => {
     const res = await fetch(`${BACKEND_URL}/auth/google/url`);
     const data = await res.json();

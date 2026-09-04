@@ -12,6 +12,7 @@ type Copy = {
   authError: string;
   discordLoginError: string;
   googleLoginError: string;
+  discordLinkError: string;
   heroLine1: string;
   heroLine2: string;
   heroParagraph: string;
@@ -35,6 +36,7 @@ const pt: Copy = {
   authError: "Falha na autenticação. Tente novamente.",
   discordLoginError: "Erro ao iniciar login via Discord.",
   googleLoginError: "Login com Google indisponível no momento.",
+  discordLinkError: "Não foi possível conectar sua conta Discord.",
   heroLine1: "Sua cidade",
   heroLine2: "merece o melhor.",
   heroParagraph:
@@ -63,6 +65,7 @@ const en: Copy = {
   authError: "Authentication failed. Please try again.",
   discordLoginError: "Error starting Discord login.",
   googleLoginError: "Google login is unavailable right now.",
+  discordLinkError: "Could not connect your Discord account.",
   heroLine1: "Your city",
   heroLine2: "deserves the best.",
   heroParagraph:
@@ -134,11 +137,32 @@ export default function AuthPage() {
     // O provider ecoa "state" de volta junto com o "code" - usamos isso pra
     // saber se esse callback é do Discord ou do Google (mesma página /auth
     // trata os dois). Sem state, assume Discord (compatibilidade com links
-    // antigos que não tinham esse param).
+    // antigos que não tinham esse param). "discord_link" é um terceiro caso:
+    // usuário JÁ logado (ex: por Google) conectando o Discord por cima, ver
+    // Servers.tsx (aba "Minha Conta") - nunca cria sessão nova, só atualiza
+    // a conta atual.
     const state = urlParams.get("state");
     const isGoogle = state === "google";
+    const isDiscordLink = state === "discord_link";
 
     setLoading(true);
+
+    if (isDiscordLink) {
+      api
+        .linkDiscordCallback(code)
+        .then(() => {
+          const next = sessionStorage.getItem("goat_auth_next");
+          sessionStorage.removeItem("goat_auth_next");
+          window.location.href = next || "/servers?tab=conta&discordLinked=1";
+        })
+        .catch((err) => {
+          setErrorMsg(err?.message || t.discordLinkError);
+          console.error(err);
+        })
+        .finally(() => setLoading(false));
+      return;
+    }
+
     const callback = isGoogle ? api.handleGoogleCallback(code) : api.handleDiscordCallback(code);
     callback
       .then((data) => {

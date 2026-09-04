@@ -78,6 +78,10 @@ type Copy = {
   discordIdLabel: string;
   memberSince: string;
   logout: string;
+  connectDiscordLabel: string;
+  connectDiscordButton: string;
+  connectDiscordError: string;
+  discordLinkedSuccess: string;
 };
 
 const pt: Copy = {
@@ -126,6 +130,10 @@ const pt: Copy = {
   discordIdLabel: "Discord ID",
   memberSince: "Membro desde",
   logout: "Sair da conta",
+  connectDiscordLabel: "Discord",
+  connectDiscordButton: "Conectar Discord",
+  connectDiscordError: "Não foi possível conectar sua conta Discord.",
+  discordLinkedSuccess: "Conta Discord conectada com sucesso.",
 };
 
 const en: Copy = {
@@ -173,6 +181,10 @@ const en: Copy = {
   discordIdLabel: "Discord ID",
   memberSince: "Member since",
   logout: "Log out",
+  connectDiscordLabel: "Discord",
+  connectDiscordButton: "Connect Discord",
+  connectDiscordError: "Could not connect your Discord account.",
+  discordLinkedSuccess: "Discord account connected successfully.",
 };
 
 export default function ServersPage() {
@@ -290,6 +302,29 @@ export default function ServersPage() {
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/auth";
+  };
+
+  const [discordLinkNotice, setDiscordLinkNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("discordLinked") === "1") {
+      setDiscordLinkNotice(t.discordLinkedSuccess);
+      const next = new URLSearchParams(searchParams);
+      next.delete("discordLinked");
+      setSearchParams(next, { replace: true });
+      api.getMe().then((profile) => profile && setMe(profile));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleConnectDiscord = async () => {
+    try {
+      sessionStorage.setItem("goat_auth_next", "/servers?tab=conta&discordLinked=1");
+      const url = await api.getDiscordLinkUrl();
+      window.location.href = url;
+    } catch (err: any) {
+      setDiscordLinkNotice(err?.message || t.connectDiscordError);
+    }
   };
 
   const handleDownload = async (product: DownloadableProduct) => {
@@ -691,6 +726,11 @@ export default function ServersPage() {
                   </h1>
                   <p className="text-sm text-muted-foreground">{t.accountSubtitle}</p>
                 </div>
+                {discordLinkNotice && (
+                  <div className="mb-4 max-w-2xl rounded-xl border border-hairline bg-elevated/60 p-3 text-sm text-foreground">
+                    {discordLinkNotice}
+                  </div>
+                )}
                 {meLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                     <p className="text-sm animate-pulse">{t.loadingAccount}</p>
@@ -742,7 +782,7 @@ export default function ServersPage() {
                           {me.role}
                         </p>
                       </div>
-                      {me.discordId && (
+                      {me.discordId ? (
                         <div>
                           <p className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground">
                             {t.discordIdLabel}
@@ -750,6 +790,19 @@ export default function ServersPage() {
                           <p className="mt-1.5 text-sm font-mono text-foreground/75">
                             {me.discordId}
                           </p>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-[10.5px] uppercase tracking-[0.12em] text-muted-foreground">
+                            {t.connectDiscordLabel}
+                          </p>
+                          <MriButton
+                            variant="outline"
+                            onClick={handleConnectDiscord}
+                            className="mt-1.5 h-8 rounded-md px-3 text-xs"
+                          >
+                            {t.connectDiscordButton}
+                          </MriButton>
                         </div>
                       )}
                       <div>
