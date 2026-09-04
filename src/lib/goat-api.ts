@@ -675,7 +675,13 @@ export const api = {
       },
       deleteProduct: async (
         slug: string,
-      ): Promise<{ success: boolean; plans: number; orders: number; licenses: number; servers: number }> => {
+      ): Promise<{
+        success: boolean;
+        plans: number;
+        orders: number;
+        licenses: number;
+        servers: number;
+      }> => {
         return safeFetchJson(`${BACKEND_URL}/products/admin/${slug}`, {
           method: "DELETE",
           headers: getHeaders(),
@@ -782,7 +788,8 @@ export const api = {
     },
     grants: {
       create: (payload: {
-        discordId: string;
+        discordId?: string;
+        email?: string;
         plan: string;
         serverName?: string;
       }): Promise<{

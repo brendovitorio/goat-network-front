@@ -121,6 +121,9 @@ type Copy = {
     description: string;
     discordIdLabel: string;
     discordIdPlaceholder: string;
+    orDivider: string;
+    emailLabel: string;
+    emailPlaceholder: string;
     planLabel: string;
     planEmptyOption: string;
     serverNameLabel: string;
@@ -325,7 +328,11 @@ type Copy = {
       code: string,
       impact: { orders: number; licenses: number; servers: number },
     ) => string;
-    planDeletedPermanently: (impact: { orders: number; licenses: number; servers: number }) => string;
+    planDeletedPermanently: (impact: {
+      orders: number;
+      licenses: number;
+      servers: number;
+    }) => string;
     deletePlanPermanentlyError: string;
     confirmDeleteCoupon: (code: string) => string;
     couponDeleted: string;
@@ -411,9 +418,12 @@ const pt: Copy = {
   grants: {
     heading: "Liberar de graça",
     description:
-      "Dá acesso a um plano pra alguém sem passar pela Stripe — gera o pedido/licença igual a uma compra real, só que sem cobrança. O cliente precisa já ter feito login no site pelo menos uma vez.",
-    discordIdLabel: "Discord ID do cliente *",
+      "Dá acesso a um plano pra alguém sem passar pela Stripe — gera o pedido/licença igual a uma compra real, só que sem cobrança. O cliente precisa já ter feito login no site pelo menos uma vez (por Discord ID ou pelo e-mail da conta Google).",
+    discordIdLabel: "Discord ID do cliente",
     discordIdPlaceholder: "123456789012345678",
+    orDivider: "ou",
+    emailLabel: "E-mail do cliente (login via Google)",
+    emailPlaceholder: "cliente@gmail.com",
     planLabel: "Plano *",
     planEmptyOption: "Nenhum plano cadastrado",
     serverNameLabel: "Nome do servidor (opcional — só usado se o plano pedir registro)",
@@ -600,7 +610,7 @@ const pt: Copy = {
     planArchived: (code) => `Plano '${code}' arquivado.`,
     archivePlanError: "Erro ao arquivar plano.",
     updateProductError: "Erro ao atualizar produto.",
-    discordIdRequired: "Informe o Discord ID do cliente.",
+    discordIdRequired: "Informe o Discord ID ou o e-mail do cliente.",
     selectPlan: "Selecione um plano.",
     grantError: "Erro ao liberar produto.",
     couponCodeRequired: "Informe o código do cupom.",
@@ -729,9 +739,12 @@ const en: Copy = {
   grants: {
     heading: "Grant for free",
     description:
-      "Gives someone access to a plan without going through Stripe — generates the order/license just like a real purchase, but with no charge. The customer must have logged into the site at least once already.",
-    discordIdLabel: "Customer's Discord ID *",
+      "Gives someone access to a plan without going through Stripe — generates the order/license just like a real purchase, but with no charge. The customer must have logged into the site at least once already (by Discord ID or by their Google account email).",
+    discordIdLabel: "Customer's Discord ID",
     discordIdPlaceholder: "123456789012345678",
+    orDivider: "or",
+    emailLabel: "Customer's email (Google login)",
+    emailPlaceholder: "customer@gmail.com",
     planLabel: "Plan *",
     planEmptyOption: "No plans registered",
     serverNameLabel: "Server name (optional — only used if the plan requires registration)",
@@ -920,7 +933,7 @@ const en: Copy = {
     planArchived: (code) => `Plan '${code}' archived.`,
     archivePlanError: "Error archiving plan.",
     updateProductError: "Error updating product.",
-    discordIdRequired: "Enter the customer's Discord ID.",
+    discordIdRequired: "Enter the customer's Discord ID or email.",
     selectPlan: "Select a plan.",
     grantError: "Error granting product.",
     couponCodeRequired: "Enter the coupon code.",
@@ -996,7 +1009,7 @@ const emptyPlanForm = {
   features: "",
 };
 
-const emptyGrantForm = { discordId: "", plan: "", serverName: "" };
+const emptyGrantForm = { discordId: "", email: "", plan: "", serverName: "" };
 
 const emptyCouponForm = {
   code: "",
@@ -1519,7 +1532,7 @@ export default function CeoPage() {
     e.preventDefault();
     setMsg(null);
     setGrantResult(null);
-    if (!grantForm.discordId.trim()) {
+    if (!grantForm.discordId.trim() && !grantForm.email.trim()) {
       setMsg({ type: "error", text: t.messages.discordIdRequired });
       return;
     }
@@ -1530,7 +1543,8 @@ export default function CeoPage() {
     setGrantingFree(true);
     try {
       const res = await api.admin.grants.create({
-        discordId: grantForm.discordId.trim(),
+        discordId: grantForm.discordId.trim() || undefined,
+        email: grantForm.email.trim() || undefined,
         plan: grantForm.plan,
         serverName: grantForm.serverName.trim() || undefined,
       });
@@ -2111,7 +2125,9 @@ export default function CeoPage() {
               <Field label={t.sourcePackages.productLabel}>
                 <select
                   value={spProduct}
-                  onChange={(e) => setSpProduct(e.target.value as (typeof PROTECTABLE_RESOURCES)[number])}
+                  onChange={(e) =>
+                    setSpProduct(e.target.value as (typeof PROTECTABLE_RESOURCES)[number])
+                  }
                   className={inputClass}
                 >
                   {PROTECTABLE_RESOURCES.map((key) => (
@@ -2208,6 +2224,20 @@ export default function CeoPage() {
                   placeholder={t.grants.discordIdPlaceholder}
                 />
               </Field>
+              <div className="flex items-end justify-center pb-3 text-[11px] uppercase tracking-wider text-muted-foreground sm:col-span-2 sm:pb-0 sm:pt-6">
+                {t.grants.orDivider}
+              </div>
+              <div className="sm:col-span-2">
+                <Field label={t.grants.emailLabel}>
+                  <MriInput
+                    type="email"
+                    value={grantForm.email}
+                    onChange={(e) => setGrantForm({ ...grantForm, email: e.target.value })}
+                    className={inputClass}
+                    placeholder={t.grants.emailPlaceholder}
+                  />
+                </Field>
+              </div>
               <Field label={t.grants.planLabel}>
                 <select
                   value={grantForm.plan}
