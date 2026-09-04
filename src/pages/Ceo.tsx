@@ -162,6 +162,7 @@ type Copy = {
     maxUsesSuffix: (n: number) => string;
     expiresSuffix: (date: string) => string;
     deactivate: string;
+    deleteButton: string;
   };
   licenses: {
     heading: string;
@@ -228,6 +229,7 @@ type Copy = {
     inactive: string;
     deactivateProduct: string;
     reactivateProduct: string;
+    deleteProduct: string;
     noPlans: string;
     archived: string;
     hasFile: string;
@@ -241,6 +243,7 @@ type Copy = {
     closeEdit: string;
     editDetails: string;
     archive: string;
+    deletePlanPermanently: string;
     currentFile: (name: string) => string;
     noFileYet: string;
     uploading: string;
@@ -311,6 +314,15 @@ type Copy = {
     fileTooBigSp: string;
     packageUploaded: (product: string) => string;
     uploadPackageError: string;
+    confirmDeleteProduct: (name: string) => string;
+    productDeleted: string;
+    deleteProductError: string;
+    confirmDeletePlanPermanently: (code: string) => string;
+    planDeletedPermanently: string;
+    deletePlanPermanentlyError: string;
+    confirmDeleteCoupon: (code: string) => string;
+    couponDeleted: string;
+    deleteCouponError: string;
   };
 };
 
@@ -438,6 +450,7 @@ const pt: Copy = {
     maxUsesSuffix: (n) => ` · até ${n} uso(s)`,
     expiresSuffix: (date) => ` · expira ${date}`,
     deactivate: "Desativar",
+    deleteButton: "Excluir",
   },
   licenses: {
     heading: "Gerenciamento de licenças",
@@ -523,6 +536,7 @@ const pt: Copy = {
     inactive: "Inativo",
     deactivateProduct: "Desativar produto",
     reactivateProduct: "Reativar produto",
+    deleteProduct: "Excluir produto",
     noPlans: "Nenhum plano cadastrado pra esse produto ainda.",
     archived: "Arquivado",
     hasFile: "com arquivo",
@@ -537,6 +551,7 @@ const pt: Copy = {
     closeEdit: "Fechar edição",
     editDetails: "Editar detalhes",
     archive: "Arquivar",
+    deletePlanPermanently: "Excluir de vez",
     currentFile: (name) => `Arquivo atual: ${name} — enviar um novo substitui esse.`,
     noFileYet: "Nenhum arquivo anexado ainda (produto até 5MB).",
     uploading: "Enviando...",
@@ -611,6 +626,17 @@ const pt: Copy = {
     fileTooBigSp: "Arquivo maior que o limite de 50MB.",
     packageUploaded: (product) => `Fonte de "${product}" enviado e criptografado com sucesso.`,
     uploadPackageError: "Erro ao enviar o fonte.",
+    confirmDeleteProduct: (name) =>
+      `Excluir o produto '${name}' de vez? Só funciona se ele não tiver nenhum plano cadastrado. Isso não pode ser desfeito.`,
+    productDeleted: "Produto excluído.",
+    deleteProductError: "Erro ao excluir produto.",
+    confirmDeletePlanPermanently: (code) =>
+      `Excluir o plano '${code}' de vez (não é arquivar)? Só funciona se ele nunca teve pedido/licença. Isso não pode ser desfeito.`,
+    planDeletedPermanently: "Plano excluído permanentemente.",
+    deletePlanPermanentlyError: "Erro ao excluir plano.",
+    confirmDeleteCoupon: (code) => `Excluir o cupom '${code}' de vez? Isso não pode ser desfeito.`,
+    couponDeleted: "Cupom excluído.",
+    deleteCouponError: "Erro ao excluir cupom.",
   },
 };
 
@@ -739,6 +765,7 @@ const en: Copy = {
     maxUsesSuffix: (n) => ` · up to ${n} use(s)`,
     expiresSuffix: (date) => ` · expires ${date}`,
     deactivate: "Deactivate",
+    deleteButton: "Delete",
   },
   licenses: {
     heading: "License management",
@@ -824,6 +851,7 @@ const en: Copy = {
     inactive: "Inactive",
     deactivateProduct: "Deactivate product",
     reactivateProduct: "Reactivate product",
+    deleteProduct: "Delete product",
     noPlans: "No plans registered for this product yet.",
     archived: "Archived",
     hasFile: "has file",
@@ -840,6 +868,7 @@ const en: Copy = {
     closeEdit: "Close editor",
     editDetails: "Edit details",
     archive: "Archive",
+    deletePlanPermanently: "Delete permanently",
     currentFile: (name) => `Current file: ${name} — uploading a new one replaces it.`,
     noFileYet: "No file attached yet (product up to 5MB).",
     uploading: "Uploading...",
@@ -913,6 +942,17 @@ const en: Copy = {
     fileTooBigSp: "File is bigger than the 50MB limit.",
     packageUploaded: (product) => `Source for "${product}" uploaded and encrypted successfully.`,
     uploadPackageError: "Error uploading the source.",
+    confirmDeleteProduct: (name) =>
+      `Permanently delete the product '${name}'? Only works if it has no plans registered. This can't be undone.`,
+    productDeleted: "Product deleted.",
+    deleteProductError: "Error deleting product.",
+    confirmDeletePlanPermanently: (code) =>
+      `Permanently delete the plan '${code}' (not just archive)? Only works if it never had an order/license. This can't be undone.`,
+    planDeletedPermanently: "Plan permanently deleted.",
+    deletePlanPermanentlyError: "Error deleting plan.",
+    confirmDeleteCoupon: (code) => `Permanently delete the coupon '${code}'? This can't be undone.`,
+    couponDeleted: "Coupon deleted.",
+    deleteCouponError: "Error deleting coupon.",
   },
 };
 
@@ -1392,6 +1432,51 @@ export default function CeoPage() {
       setMsg({ type: "error", text: err.message || t.messages.updateProductError });
     } finally {
       setBusyCode(null);
+    }
+  };
+
+  const handleDeleteProduct = async (product: ProductItem) => {
+    if (!window.confirm(t.messages.confirmDeleteProduct(product.name))) return;
+    setBusyCode(product.slug);
+    setMsg(null);
+    try {
+      await api.admin.products.deleteProduct(product.slug);
+      setMsg({ type: "success", text: t.messages.productDeleted });
+      await loadAll();
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.deleteProductError });
+    } finally {
+      setBusyCode(null);
+    }
+  };
+
+  const handleDeletePlanPermanently = async (plan: PlanItem) => {
+    if (!window.confirm(t.messages.confirmDeletePlanPermanently(plan.code))) return;
+    setBusyCode(plan.code);
+    setMsg(null);
+    try {
+      await api.admin.deletePlanPermanently(plan.productSlug, plan.key);
+      setMsg({ type: "success", text: t.messages.planDeletedPermanently });
+      await loadAll();
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.deletePlanPermanentlyError });
+    } finally {
+      setBusyCode(null);
+    }
+  };
+
+  const handleDeleteCoupon = async (coupon: CouponItem) => {
+    if (!window.confirm(t.messages.confirmDeleteCoupon(coupon.code))) return;
+    setBusyCouponCode(coupon.code);
+    setMsg(null);
+    try {
+      await api.admin.coupons.remove(coupon.code);
+      setMsg({ type: "success", text: t.messages.couponDeleted });
+      await loadAll();
+    } catch (err: any) {
+      setMsg({ type: "error", text: err.message || t.messages.deleteCouponError });
+    } finally {
+      setBusyCouponCode(null);
     }
   };
 
@@ -2526,6 +2611,14 @@ export default function CeoPage() {
                         <Power className="h-3.5 w-3.5" /> {t.coupons.deactivate}
                       </MriButton>
                     )}
+                    <MriButton
+                      variant="danger-outline"
+                      onClick={() => handleDeleteCoupon(c)}
+                      disabled={busyCouponCode === c.code}
+                      className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> {t.coupons.deleteButton}
+                    </MriButton>
                   </MriCard>
                 ))}
               </div>
@@ -2785,6 +2878,15 @@ export default function CeoPage() {
                       <Power className="h-3.5 w-3.5" />{" "}
                       {product.active ? t.catalog.deactivateProduct : t.catalog.reactivateProduct}
                     </MriButton>
+                    <MriButton
+                      variant="danger-outline"
+                      size="sm"
+                      onClick={() => handleDeleteProduct(product)}
+                      disabled={busyCode === product.slug}
+                      className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> {t.catalog.deleteProduct}
+                    </MriButton>
                   </div>
 
                   <div className="mt-3 space-y-3">
@@ -2884,6 +2986,14 @@ export default function CeoPage() {
                               className="bg-red-500/5 hover:bg-red-500/10"
                             >
                               <Trash2 className="h-3.5 w-3.5" /> {t.catalog.archive}
+                            </MriButton>
+                            <MriButton
+                              variant="danger-outline"
+                              onClick={() => handleDeletePlanPermanently(plan)}
+                              disabled={busyCode === plan.code}
+                              className="bg-red-500/5 hover:bg-red-500/10"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> {t.catalog.deletePlanPermanently}
                             </MriButton>
                           </div>
 

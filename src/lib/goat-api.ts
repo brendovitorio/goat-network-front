@@ -647,6 +647,12 @@ export const api = {
           body: JSON.stringify(payload),
         });
       },
+      deleteProduct: async (slug: string): Promise<{ success: boolean }> => {
+        return safeFetchJson(`${BACKEND_URL}/products/admin/${slug}`, {
+          method: "DELETE",
+          headers: getHeaders(),
+        });
+      },
     },
     sourcePackages: {
       list: async (): Promise<SourcePackageItem[]> => {
@@ -729,6 +735,15 @@ export const api = {
         headers: getHeaders(),
       });
     },
+    deletePlanPermanently: async (
+      productSlug: string,
+      key: string,
+    ): Promise<{ success: boolean }> => {
+      return safeFetchJson(`${BACKEND_URL}/plans/admin/${productSlug}/${key}/permanent`, {
+        method: "DELETE",
+        headers: getHeaders(),
+      });
+    },
     grants: {
       create: (payload: {
         discordId: string;
@@ -776,6 +791,12 @@ export const api = {
             headers: getHeaders(),
           },
         );
+      },
+      remove: (code: string): Promise<{ success: boolean }> => {
+        return safeFetchJson(`${BACKEND_URL}/coupons/admin/${encodeURIComponent(code)}`, {
+          method: "DELETE",
+          headers: getHeaders(),
+        });
       },
     },
     licenses: {
